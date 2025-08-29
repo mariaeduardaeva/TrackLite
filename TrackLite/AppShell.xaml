@@ -1,15 +1,28 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="TrackLite.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:TrackLite"
-    Shell.FlyoutBehavior="Disabled"
-    Title="TrackLite">
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:local="clr-namespace:TrackLite"
+       x:Class="TrackLite.AppShell"
+       Shell.BackgroundColor="#214F4B"
+       Shell.ForegroundColor="#FCFCFC"
+       Shell.UnselectedColor="#FCFCFC"
+       Shell.TabBarBackgroundColor="#214F4B"
+       Shell.TabBarForegroundColor="#FCFCFC"
+       Shell.TabBarUnselectedColor="#FCFCFC"
+       Shell.TabBarTitleColor="#FCFCFC">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <!-- NAVEGAÇÃO -->
+    <TabBar >
+        <Tab Title="Home" Icon="home.png">
+            <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />
+        </Tab>
+
+        <Tab Title="Histórico" Icon="historia.png">
+            <ShellContent ContentTemplate="{DataTemplate local:HistoricoPage}" />
+        </Tab>
+
+        <Tab Title="Detalhe da atividade" Icon="detalhes.png">
+            <ShellContent ContentTemplate="{DataTemplate local:DetalhePage}" />
+        </Tab>
+    </TabBar>
 
 </Shell>

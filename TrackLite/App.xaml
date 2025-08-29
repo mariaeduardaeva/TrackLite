@@ -5,6 +5,12 @@
              x:Class="TrackLite.App">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- COR DE FUNDO DE TODAS AS PAGINAS -->
+            <Color x:Key="BackgroundColor">#FCFCFC</Color>
+
+            <Style TargetType="ContentPage">
+                <Setter Property="BackgroundColor" Value="{StaticResource BackgroundColor}" />
+            </Style>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
