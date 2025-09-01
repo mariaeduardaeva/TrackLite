@@ -4,10 +4,144 @@
              x:Class="TrackLite.HistoricoPage"
              BackgroundColor="#FCFCFC">
 
-    <VerticalStackLayout>
-        <Label 
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Grid Grid.Row="0"
+              ColumnDefinitions="Auto, *, Auto"
+              Padding="10,20,10,10"
+              BackgroundColor="#FCFCFC">
+            <ImageButton Source=""
+                         Grid.Column="0"        
+                         WidthRequest="25"
+                         HeightRequest="25"
+                         HorizontalOptions="Start"
+                         VerticalOptions="Center"
+                         BackgroundColor="Transparent"/>
+
+            <Label Grid.Column="1"
+                   Text="Histórico"
+                   FontAttributes="Bold"
+                   FontSize="22"
+                   TextColor="Black"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="10" Padding="10">
+
+                <Frame CornerRadius="15"
+                       BackgroundColor="#214F4B"
+                       Padding="15"
+                       HasShadow="False"
+                       HeightRequest="90">
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto"
+                          ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="repeat_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="26 de agosto" TextColor="White" FontSize="12" />
+                            <Label Text="Distância" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="5.5 km" TextColor="White" FontSize="14" />
+                        </StackLayout>
+                        <Image Grid.Column="2" Source="runner_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <Label Text="5:03 / km" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Image Source="timer_white.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame CornerRadius="15"
+                       BackgroundColor="#303681"
+                       Padding="15"
+                       HasShadow="False"
+                       HeightRequest="90">
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto"
+                          ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="repeat_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="26 de agosto" TextColor="White" FontSize="12" />
+                            <Label Text="Distância" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="5.5 km" TextColor="White" FontSize="14" />
+                        </StackLayout>
+                        <Image Grid.Column="2" Source="runner_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <Label Text="5:03 / km" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Image Source="timer_white.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame CornerRadius="15" BackgroundColor="#214F4B" Padding="15" HasShadow="False" HeightRequest="90">
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="repeat_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="26 de agosto" TextColor="White" FontSize="12" />
+                            <Label Text="Distância" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="5.5 km" TextColor="White" FontSize="14" />
+                        </StackLayout>
+                        <Image Grid.Column="2" Source="runner_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <Label Text="5:03 / km" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Image Source="timer_white.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame CornerRadius="15" BackgroundColor="#303681" Padding="15" HasShadow="False" HeightRequest="90">
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="repeat_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="26 de agosto" TextColor="White" FontSize="12" />
+                            <Label Text="Distância" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="5.5 km" TextColor="White" FontSize="14" />
+                        </StackLayout>
+                        <Image Grid.Column="2" Source="runner_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <Label Text="5:03 / km" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Image Source="timer_white.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame CornerRadius="15" BackgroundColor="#214F4B" Padding="15" HasShadow="False" HeightRequest="90">
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="repeat_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="26 de agosto" TextColor="White" FontSize="12" />
+                            <Label Text="Distância" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="5.5 km" TextColor="White" FontSize="14" />
+                        </StackLayout>
+                        <Image Grid.Column="2" Source="runner_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <Label Text="5:03 / km" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Image Source="timer_white.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame CornerRadius="15" BackgroundColor="#303681" Padding="15" HasShadow="False" HeightRequest="90">
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="repeat_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="26 de agosto" TextColor="White" FontSize="12" />
+                            <Label Text="Distância" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="5.5 km" TextColor="White" FontSize="14" />
+                        </StackLayout>
+                        <Image Grid.Column="2" Source="runner_white.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center" />
+                        <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <Label Text="5:03 / km" TextColor="White" FontAttributes="Bold" FontSize="16" />
+                            <Image Source="timer_white.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
+        <VerticalStackLayout>
+            <Label 
             Text="Historico"
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
-    </VerticalStackLayout>
+        </VerticalStackLayout>
+    </Grid>
 </ContentPage>
