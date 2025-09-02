@@ -2,12 +2,104 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.DetalhePage"
-             BackgroundColor="#FCFCFC">
+             BackgroundColor="#FCFCFC"
+             Title=" Detalhe da Atividade">
 
-    <VerticalStackLayout>
-        <Label 
-            Text="Detalhe"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <ContentPage.ToolbarItems>
+        <!-- Botão Voltar -->
+        <ToolbarItem IconImageSource="back.png"
+                     Text="Voltar"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnBackClicked" />
+
+        <!-- Botão Download -->
+        <ToolbarItem IconImageSource="download.png."
+                     Text="Baixar"
+                     Order="Primary"
+                     Priority="1"
+                     Clicked="OnDownloadClicked" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto"
+              ColumnDefinitions="*"
+              Padding="15"
+              RowSpacing="20">
+
+            <!-- CABEÇALHO: DATA E TEMPO TOTAL -->
+            <StackLayout Grid.Row="0" Spacing="4">
+                <Label Text="31 de agosto - 2025"
+                       FontSize="14"
+                       TextColor="#6B6B6B"
+                       FontFamily="Inter"/>
+
+                <Label Text="1h 05min"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="#214F4B"
+                       FontFamily="Inter"/>
+            </StackLayout>
+
+            <!-- CARD DO GRÁFICO -->
+            <Frame Grid.Row="1"
+                   CornerRadius="25"
+                   HasShadow="False"
+                   Padding="15"
+                   BackgroundColor="#214F4B">
+
+                <StackLayout Spacing="10">
+                    <Label Text="Pace por km"
+                           FontSize="16"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           FontFamily="Inter"/>
+
+            <!-- Aqui você pode substituir por um gráfico real futuramente -->
+                    <BoxView HeightRequest="120"
+                             BackgroundColor="White"
+                             CornerRadius="10"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- CARD DO MAPA -->
+            <Frame Grid.Row="2"
+                   CornerRadius="25"
+                   HasShadow="False"
+                   Padding="0"
+                   BackgroundColor="#EAEAEA">
+            <!-- Por enquanto um placeholder -->
+                <Grid HeightRequest="200">
+                    <Label Text="Mapa da Corrida"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="Black"
+                           FontAttributes="Bold"/>
+                </Grid>
+            </Frame>
+
+            <!-- CARD DO RESUMO -->
+            <Frame Grid.Row="3"
+                   CornerRadius="25"
+                   HasShadow="False"
+                   Padding="15"
+                   BackgroundColor="#214F4B">
+                <StackLayout Spacing="10">
+                    <Label Text="Em média, sua corrida teve bom desempenho. Continue assim!"
+                           TextColor="White"
+                           FontFamily="Inter"/>
+
+                    <Label Text="Pace médio: 05:42"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           FontFamily="Inter"/>
+
+                    <ProgressBar Progress="0.6"
+                                 HeightRequest="8"/>
+                </StackLayout>
+            </Frame>
+
+        </Grid>
+    </ScrollView>
 </ContentPage>
