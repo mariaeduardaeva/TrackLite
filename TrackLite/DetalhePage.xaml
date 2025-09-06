@@ -3,103 +3,75 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.DetalhePage"
              BackgroundColor="#FCFCFC"
-             Title=" Detalhe da Atividade">
+             Title="Detalhes da Corrida">
 
     <ContentPage.ToolbarItems>
-        <!-- Botão Voltar -->
-        <ToolbarItem IconImageSource="back.png"
-                     Text="Voltar"
-                     Order="Primary"
-                     Priority="0"
-                     Clicked="OnBackClicked" />
-
         <!-- Botão Download -->
-        <ToolbarItem IconImageSource="download.png."
-                     Text="Baixar"
+        <ToolbarItem IconImageSource="download.png"
                      Order="Primary"
                      Priority="1"
                      Clicked="OnDownloadClicked" />
     </ContentPage.ToolbarItems>
 
     <ScrollView>
-        <Grid RowDefinitions="Auto, Auto, Auto, Auto"
-              ColumnDefinitions="*"
-              Padding="15"
-              RowSpacing="20">
-
-            <!-- CABEÇALHO: DATA E TEMPO TOTAL -->
-            <StackLayout Grid.Row="0" Spacing="4">
-                <Label Text="31 de agosto - 2025"
-                       FontSize="14"
-                       TextColor="#6B6B6B"
-                       FontFamily="Inter"/>
-
-                <Label Text="1h 05min"
-                       FontSize="28"
-                       FontAttributes="Bold"
-                       TextColor="#214F4B"
-                       FontFamily="Inter"/>
-            </StackLayout>
+        <StackLayout Padding="20" Spacing="20">
 
             <!-- CARD DO GRÁFICO -->
-            <Frame Grid.Row="1"
-                   CornerRadius="25"
+            <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="15"
                    BackgroundColor="#214F4B">
-
                 <StackLayout Spacing="10">
                     <Label Text="Pace por km"
                            FontSize="16"
-                           TextColor="White"
+                           TextColor="#FCFCFC"
                            FontAttributes="Bold"
                            FontFamily="Inter"/>
-
-            <!-- Aqui você pode substituir por um gráfico real futuramente -->
                     <BoxView HeightRequest="120"
-                             BackgroundColor="White"
+                             BackgroundColor="#FCFCFC"
                              CornerRadius="10"/>
                 </StackLayout>
             </Frame>
 
             <!-- CARD DO MAPA -->
-            <Frame Grid.Row="2"
-                   CornerRadius="25"
+            <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="0"
-                   BackgroundColor="#EAEAEA">
-            <!-- Por enquanto um placeholder -->
+                   BackgroundColor="Red">
                 <Grid HeightRequest="200">
                     <Label Text="Mapa da Corrida"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
-                           TextColor="Black"
+                           TextColor="White"
                            FontAttributes="Bold"/>
                 </Grid>
             </Frame>
 
             <!-- CARD DO RESUMO -->
-            <Frame Grid.Row="3"
-                   CornerRadius="25"
+            <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="15"
                    BackgroundColor="#214F4B">
                 <StackLayout Spacing="10">
                     <Label Text="Em média, sua corrida teve bom desempenho. Continue assim!"
-                           TextColor="White"
+                           FontAttributes="Bold"
+                           TextColor="#FCFCFC"
+                           FontSize="15"
                            FontFamily="Inter"/>
-
                     <Label Text="Pace médio: 05:42"
                            FontSize="16"
                            FontAttributes="Bold"
-                           TextColor="White"
+                           TextColor="#FCFCFC"
                            FontFamily="Inter"/>
-
                     <ProgressBar Progress="0.6"
-                                 HeightRequest="8"/>
+                                 HeightRequest="8"
+                                 ProgressColor="#FCFCFC"
+                                 BackgroundColor="#214F4B"
+                                 Margin="0,5"/>
                 </StackLayout>
             </Frame>
 
-        </Grid>
+        </StackLayout>
     </ScrollView>
+
 </ContentPage>

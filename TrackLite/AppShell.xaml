@@ -17,8 +17,8 @@
             <ShellContent ContentTemplate="{DataTemplate local:HistoricoPage}" />
         </Tab>
 
-        <Tab Title="Detalhe da atividade" Icon="detalhes.png">
-            <ShellContent ContentTemplate="{DataTemplate local:DetalhePage}" />
+        <Tab Title="Configurações" Icon="settings.png">
+            <ShellContent ContentTemplate="{DataTemplate local:ConfigPage}" />
         </Tab>
     </TabBar>
 

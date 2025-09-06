@@ -8,12 +8,8 @@ namespace TrackLite
         {
             InitializeComponent();
 
-            ConfigureTabs();
-        }
-
-        private void ConfigureTabs()
-        {
-
+            // Registra a rota para navegação até a página de detalhe
+            Routing.RegisterRoute(nameof(DetalhePage), typeof(DetalhePage));
         }
     }
 }
