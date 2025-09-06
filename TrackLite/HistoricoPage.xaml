@@ -38,7 +38,7 @@
                               ColumnSpacing="10">
 
                             <Image Grid.Column="0" 
-                                   Source="repeat_white.png"
+                                   Source="caminho.png"
                                    WidthRequest="25"
                                    HeightRequest="25"
                                    VerticalOptions="Center" />
@@ -57,20 +57,24 @@
                             </StackLayout>
 
                             <Image Grid.Column="2" 
-                                   Source="runner_white.png"
+                                   Source="corrida_b.png"
                                    WidthRequest="25"
                                    HeightRequest="25"
-                                   VerticalOptions="Center" />
+                                   VerticalOptions="Center"/>
 
-                            <StackLayout Grid.Column="3" VerticalOptions="Center">
+                            <StackLayout Grid.Column="3" 
+                                         Orientation="Horizontal" 
+                                         VerticalOptions="Center"
+                                         Spacing="5">
                                 <Label Text="{Binding Ritmo}" 
                                        TextColor="#FCFCFC" 
                                        FontAttributes="Bold" 
-                                       FontSize="16" />
-                                <Image Source="timer_white.png" 
-                                       WidthRequest="20" 
-                                       HeightRequest="20" 
-                                       HorizontalOptions="End" />
+                                       FontSize="16" 
+                                       VerticalOptions="Center" />
+                                <Image Source="cronometro.png" 
+                                       WidthRequest="23" 
+                                       HeightRequest="23" 
+                                       VerticalOptions="Center" />
                             </StackLayout>
                         </Grid>
                     </Frame>
