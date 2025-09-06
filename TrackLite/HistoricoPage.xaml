@@ -1,32 +1,18 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.HistoricoPage"
              BackgroundColor="#FCFCFC"
              Title="Histórico">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Lixo"
+                     IconImageSource="lixo_p.png"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnLixoClicked" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="Auto, *">
-
-        <!-- Cabeçalho -->
-        <Grid Grid.Row="0"
-              ColumnDefinitions="Auto, *, Auto"
-              Padding="10,20,10,10"
-              BackgroundColor="#FCFCFC">
-            <Label Text="Histórico"
-                   FontSize="22"
-                   FontAttributes="Bold"
-                   Grid.Column="0"
-                   VerticalOptions="Center"/>
-            <ImageButton Source="lixo_p.png"
-                         Grid.Column="2"
-                         WidthRequest="25"
-                         HeightRequest="25"
-                         HorizontalOptions="End"
-                         VerticalOptions="Center"
-                         BackgroundColor="Transparent"/>
-        </Grid>
-
-        <!-- CollectionView -->
         <CollectionView x:Name="CorridasCollectionView"
                         Grid.Row="1"
                         ItemsSource="{Binding Corridas}"
@@ -43,7 +29,6 @@
                            Margin="10,5">
 
                         <Frame.GestureRecognizers>
-                            <!-- Binding corrigido usando x:Reference -->
                             <TapGestureRecognizer 
                                 Command="{Binding Source={x:Reference CorridasCollectionView}, Path=BindingContext.ItemTappedCommand}"
                                 CommandParameter="{Binding .}" />

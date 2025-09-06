@@ -13,7 +13,7 @@ namespace TrackLite
             set
             {
                 corridaSelecionada = value;
-                BindingContext = corridaSelecionada; // seta o binding para o XAML
+                BindingContext = corridaSelecionada;
             }
         }
 
@@ -24,7 +24,7 @@ namespace TrackLite
 
         private async void OnBackClicked(object sender, EventArgs e)
         {
-            await Shell.Current.GoToAsync(".."); // volta no Shell
+            await Shell.Current.GoToAsync("..");
         }
 
         private async void OnDownloadClicked(object sender, EventArgs e)

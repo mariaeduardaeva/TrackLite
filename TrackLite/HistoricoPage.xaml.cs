@@ -29,19 +29,22 @@ public partial class HistoricoPage : ContentPage
         BindingContext = this;
     }
 
-    // Comando chamado pelo TapGestureRecognizer
     public ICommand ItemTappedCommand => new Command<Corrida>(async (corrida) =>
     {
         if (corrida == null)
             return;
 
-        // Navegação no Shell passando o objeto como parâmetro
         await Shell.Current.GoToAsync(nameof(DetalhePage), true,
             new Dictionary<string, object>
             {
                 { "CorridaSelecionada", corrida }
             });
     });
+
+    private async void OnLixoClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new LixoPage());
+    }
 }
 
 public class Corrida
