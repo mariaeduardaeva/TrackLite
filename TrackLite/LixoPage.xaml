@@ -1,12 +1,101 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.LixoPage"
-             Title="LixoPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="Lixeira"
+             BackgroundColor="#FCFCFC">
+
+    <CollectionView x:Name="LixoCollectionView"
+                    Margin="5,0"
+                    ItemsSource="{Binding CorridasLixo}"
+                    SelectionMode="None">
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <SwipeView>
+                    <SwipeView.RightItems>
+                        <SwipeItems Mode="Execute">
+                            <SwipeItemView Invoked="OnRestaurarInvoked">
+                                <Frame CornerRadius="25"
+                                       BackgroundColor="Green"
+                                       Padding="10"
+                                       Margin="5"
+                                       HasShadow="True">
+                                    <StackLayout Orientation="Horizontal"
+                                                 VerticalOptions="Center"
+                                                 HorizontalOptions="Center">
+                                        <Image Source="restaurar.png" 
+                                               WidthRequest="20" 
+                                               HeightRequest="20"/>
+                                        <Label Text="Restaurar" 
+                                               TextColor="White" 
+                                               FontAttributes="Bold"
+                                               VerticalOptions="Center"
+                                               Margin="5,0,0,0"/>
+                                    </StackLayout>
+                                </Frame>
+                            </SwipeItemView>
+                        </SwipeItems>
+                    </SwipeView.RightItems>
+
+                    <Frame CornerRadius="25"
+                           BackgroundColor="{Binding CorFundo}"
+                           Padding="15"
+                           HasShadow="False"
+                           HeightRequest="90"
+                           Margin="10,5">
+
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer 
+                                Command="{Binding Source={x:Reference LixoCollectionView}, Path=BindingContext.ItemTappedCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Frame.GestureRecognizers>
+
+                        <Grid ColumnDefinitions="Auto, *, Auto, Auto"
+                              ColumnSpacing="10">
+
+                            <Image Grid.Column="0" 
+                                   Source="caminho.png"
+                                   WidthRequest="25"
+                                   HeightRequest="25"
+                                   VerticalOptions="Center" />
+
+                            <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding Data, StringFormat='{0:dd/MM/yyyy HH:mm}'}" 
+                                       TextColor="#FCFCFC"
+                                       FontSize="12" />
+                                <Label Text="Distancia" 
+                                       TextColor="#FCFCFC" 
+                                       FontAttributes="Bold" 
+                                       FontSize="16" />
+                                <Label Text="{Binding Distancia}" 
+                                       TextColor="#FCFCFC"
+                                       FontSize="14" />
+                            </StackLayout>
+
+                            <Image Grid.Column="2" 
+                                   Source="corrida_b.png"
+                                   WidthRequest="25"
+                                   HeightRequest="25"
+                                   VerticalOptions="Center"/>
+
+                            <StackLayout Grid.Column="3" 
+                                         Orientation="Horizontal" 
+                                         VerticalOptions="Center"
+                                         Spacing="5">
+                                <Label Text="{Binding Ritmo}" 
+                                       TextColor="#FCFCFC" 
+                                       FontAttributes="Bold" 
+                                       FontSize="16" 
+                                       VerticalOptions="Center" />
+                                <Image Source="cronometro.png" 
+                                       WidthRequest="23" 
+                                       HeightRequest="23" 
+                                       VerticalOptions="Center" />
+                            </StackLayout>
+                        </Grid>
+                    </Frame>
+                </SwipeView>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 </ContentPage>
