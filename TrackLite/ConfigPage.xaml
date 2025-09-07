@@ -1,53 +1,24 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.ConfigPage"
-             BackgroundColor="#FCFCFC"
-             Title="Configuração">
+             BackgroundColor="#FCFCFC">
 
     <VerticalStackLayout Margin="0,20,0,0">
 
+        <!-- GitHub -->
         <Grid ColumnDefinitions="Auto, *, Auto"
               Padding="20, 15"
               BackgroundColor="White">
-            <Image Grid.Column="0" Source="notificacao.png"
-                   WidthRequest="25" HeightRequest="25"
-                   VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="Notificações"
-                   FontSize="16" FontAttributes="Bold"
-                   VerticalOptions="Center" Margin="20,0,0,0" />
-            <Image Grid.Column="2" Source="seta_direita.png"
-                   WidthRequest="15" HeightRequest="15"
-                   VerticalOptions="Center" />
-        </Grid>
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnGitHubTapped" NumberOfTapsRequired="1"/>
+            </Grid.GestureRecognizers>
 
-        <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,0,0,0" />
-
-        <Grid ColumnDefinitions="Auto, *, Auto"
-              Padding="20, 15"
-              BackgroundColor="White">
             <Image Grid.Column="0" Source="github.png"
                    WidthRequest="25" HeightRequest="25"
                    VerticalOptions="Center" />
             <Label Grid.Column="1" Text="GitHub"
                    FontSize="16" FontAttributes="Bold"
                    VerticalOptions="Center" Margin="20,0,0,0" />
-            <Image Grid.Column="2" Source="seta_direita.png"
-                   WidthRequest="15" HeightRequest="15"
-                   VerticalOptions="Center" />
-        </Grid>
-
-        <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,0,0,0" />
-
-        <Grid ColumnDefinitions="Auto, *, Auto"
-              Padding="20, 15"
-              BackgroundColor="White">
-            <Image Grid.Column="0" Source="modoescuro.png"
-                   WidthRequest="25" HeightRequest="25"
-                   VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="Modo Escuro"
-                   FontSize="16" FontAttributes="Bold"
-                   VerticalOptions="Center" Margin="20,0,0,0" />
-            <Switch Grid.Column="2" IsToggled="False" />
         </Grid>
 
     </VerticalStackLayout>

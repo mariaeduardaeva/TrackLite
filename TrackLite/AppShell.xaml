@@ -17,7 +17,7 @@
             <ShellContent ContentTemplate="{DataTemplate local:HistoricoPage}" />
         </Tab>
 
-        <Tab Title="Configurações" Icon="settings.png">
+        <Tab Title="Mais" Icon="menu.png">
             <ShellContent ContentTemplate="{DataTemplate local:ConfigPage}" />
         </Tab>
     </TabBar>
