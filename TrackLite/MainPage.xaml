@@ -9,10 +9,11 @@
           Padding="10">
 
         <!-- TEMPO, DISTANCIA E PACE -->
-        <StackLayout Grid.Row="0" 
+        <StackLayout Margin="0, 10,0,0"
+                     Grid.Row="0" 
                      Orientation="Horizontal" 
                      HorizontalOptions="Start" 
-                     Spacing="25">
+                     Spacing="20">
             <Image Source="corrida_v.png" 
                    WidthRequest="35" 
                    HeightRequest="35" 
@@ -60,10 +61,10 @@
 
         <!-- PLACEHOLDER MAPA -->
         <Frame Grid.Row="1"
-               CornerRadius="25"
-               HasShadow="False"
-               Padding="0"
-               Margin="0,10"
+            CornerRadius="25"
+            HasShadow="False"
+            Padding="10"
+            Margin="0,15,0,-60"
                BackgroundColor="Red">
             <Label Text="Mapa aqui"
                    HorizontalOptions="Center"
@@ -73,10 +74,10 @@
         </Frame>
 
         <!-- BOTÕES DE COMEÇAR, SALVAR E EXCLUIR -->
-        <Grid Grid.Row="2" ColumnDefinitions="*, *, *" Padding="20" ColumnSpacing="15">
+        <Grid Grid.Row="2" ColumnDefinitions="*, *, *" Padding="20" ColumnSpacing="-120">
 
             <Button BackgroundColor="#214F4B"
-            CornerRadius="25"
+            CornerRadius="20"
             Padding="5"
             HorizontalOptions="Center"
             HeightRequest="60"
@@ -88,7 +89,7 @@
 
             <Button Grid.Column="1"
             BackgroundColor="#214F4B"
-            CornerRadius="25"
+            CornerRadius="20"
             Padding="5"
             HorizontalOptions="Center"
             HeightRequest="60"
@@ -100,7 +101,7 @@
 
             <Button Grid.Column="2"
             BackgroundColor="#214F4B"
-            CornerRadius="25"
+            CornerRadius="20"
             Padding="5"
             HorizontalOptions="Center"
             HeightRequest="60"
