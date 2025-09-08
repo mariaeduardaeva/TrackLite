@@ -6,12 +6,12 @@
        Shell.TabBarForegroundColor="#FCFCFC"
        Shell.TabBarUnselectedColor="#FCFCFC"
        Shell.TabBarTitleColor="#FCFCFC"
-       Shell.BackgroundColor="#f8f4f4"
+       Shell.BackgroundColor="#F2F2F2"
        Shell.TitleColor="Black"
        Shell.ForegroundColor="Black"
        Shell.NavBarHasShadow="False">
 
-    <!-- NAVEGAÇÃO -->
+    <!-- Navegação -->
     <TabBar >
         <Tab Title="Home" Icon="home.png">
             <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />

@@ -2,11 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.MainPage"
-             BackgroundColor="#f8f4f4">
+             BackgroundColor="#F2F2F2">
 
     <Grid>
 
-        <!-- PLACEHOLDER MAPA -->
+        <!-- Placeholder mapa -->
         <Frame CornerRadius="25" 
                HasShadow="False" 
                Padding="0" 
@@ -19,7 +19,7 @@
                    FontAttributes="Bold"/>
         </Frame>
 
-        <!-- BORDER BRANCO COM SOMBRA -->
+        <!-- Frame branco -->
         <Border StrokeThickness="0"
                 BackgroundColor="#FCFCFC"
                 StrokeShape="RoundRectangle 20"
@@ -36,7 +36,7 @@
 
             <Grid RowDefinitions="Auto,Auto" Padding="15" RowSpacing="10">
 
-                <!-- TEMPO -->
+                <!-- Tempo -->
                 <StackLayout Grid.Row="0"
                              HorizontalOptions="Center"
                              Spacing="0">
@@ -52,7 +52,7 @@
                            HorizontalOptions="Center"/>
                 </StackLayout>
 
-                <!-- DISTÂNCIA E PACE -->
+                <!-- Distância e pace -->
                 <StackLayout Grid.Row="1"
                              Orientation="Horizontal"
                              HorizontalOptions="Center"
@@ -88,7 +88,7 @@
             </Grid>
         </Border>
 
-        <!-- BOTÕES -->
+        <!-- Botões -->
         <Grid ColumnDefinitions="*,*,*"
               HorizontalOptions="Center"
               VerticalOptions="End"

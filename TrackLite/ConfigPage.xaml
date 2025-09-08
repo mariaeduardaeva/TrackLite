@@ -1,12 +1,12 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.ConfigPage"
-             BackgroundColor="#f8f4f4">
+             BackgroundColor="#F2F2F2">
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Margin="0,20,0,20">
 
-            <!-- Feedback / Suporte -->
+            <!-- Suporte -->
             <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
@@ -64,7 +64,7 @@
                 </Grid>
             </Frame>
 
-            <!-- Legal / Informativo -->
+            <!-- Legal/Info -->
             <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 

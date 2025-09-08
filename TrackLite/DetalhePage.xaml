@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.DetalhePage"
-             BackgroundColor="#f8f4f4"
+             BackgroundColor="#F2F2F2"
              Title="Detalhes da Corrida">
 
     <ContentPage.ToolbarItems>
@@ -16,7 +16,7 @@
     <ScrollView>
         <StackLayout Padding="20" Spacing="20">
 
-            <!-- CARD DO GRÁFICO -->
+            <!-- Card do gráfico -->
             <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="15"
@@ -33,7 +33,7 @@
                 </StackLayout>
             </Frame>
 
-            <!-- CARD DO MAPA -->
+            <!-- Card do mapa -->
             <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="0"
@@ -47,7 +47,7 @@
                 </Grid>
             </Frame>
 
-            <!-- CARD DO RESUMO -->
+            <!-- Card do resumo -->
             <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="15"

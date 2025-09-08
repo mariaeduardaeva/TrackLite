@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.LegalPage"
              Title="Termos de Uso"
-             BackgroundColor="#f8f4f4">
+             BackgroundColor="#F2F2F2">
 
     <ScrollView>
         <VerticalStackLayout Padding="20">
