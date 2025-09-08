@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.LixoPage"
              Title="Lixeira"
-             BackgroundColor="#f8f4f4"
-             Shell.BackgroundColor="#f8f4f4">
+             BackgroundColor="#f8f4f4">
 
     <CollectionView x:Name="LixoCollectionView"
                     Margin="5,0"

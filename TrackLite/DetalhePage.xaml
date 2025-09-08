@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.DetalhePage"
              BackgroundColor="#f8f4f4"
-             Shell.BackgroundColor="#f8f4f4"
              Title="Detalhes da Corrida">
 
     <ContentPage.ToolbarItems>

@@ -7,7 +7,7 @@
         <VerticalStackLayout Spacing="20" Margin="0,20,0,20">
 
             <!-- Feedback / Suporte -->
-            <Frame BackgroundColor="White" 
+            <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
                    Padding="0" 
@@ -39,7 +39,7 @@
             </Frame>
 
             <!-- GitHub -->
-            <Frame BackgroundColor="White" 
+            <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
                    Padding="0" 
@@ -65,7 +65,7 @@
             </Frame>
 
             <!-- Legal / Informativo -->
-            <Frame BackgroundColor="White" 
+            <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
                    Padding="0" 
@@ -94,7 +94,7 @@
             </Frame>
 
             <!-- Sobre o App -->
-            <Frame BackgroundColor="White" 
+            <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
                    Padding="0" 
