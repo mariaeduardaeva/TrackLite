@@ -1,25 +1,124 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.ConfigPage"
-             BackgroundColor="#FCFCFC">
+             BackgroundColor="#f8f4f4">
 
-    <VerticalStackLayout Margin="0,20,0,0">
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Margin="0,20,0,20">
 
-        <!-- GitHub -->
-        <Grid ColumnDefinitions="Auto, *, Auto"
-              Padding="20, 15"
-              BackgroundColor="White">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnGitHubTapped" NumberOfTapsRequired="1"/>
-            </Grid.GestureRecognizers>
+            <!-- Feedback / Suporte -->
+            <Frame BackgroundColor="White" 
+                   CornerRadius="17" 
+                   HasShadow="False" 
+                   Padding="0" 
+                   Margin="15,0" 
+                   BorderColor="Transparent">
+                <Grid Padding="20,15" ColumnDefinitions="Auto,*,Auto">
+                    <Image Grid.Column="0" 
+                           Source="feedback.png" 
+                           WidthRequest="25" 
+                           HeightRequest="25" 
+                           VerticalOptions="Center"/>
+                    <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0">
+                        <Label Text="Suporte" 
+                               FontSize="16" 
+                               FontAttributes="Bold" 
+                               TextColor="#1C1C1E"/>
+                        <Label Text="Fale conosco!" 
+                               FontSize="14" 
+                               TextColor="#8E8E93" 
+                               Margin="0,5,0,0"/>
+                    </VerticalStackLayout>
+                    <Button Grid.Column="2" Text="Enviar pergunta" 
+                            Clicked="OnFeedbackClicked" 
+                            BackgroundColor="#214F4B" 
+                            TextColor="White" 
+                            CornerRadius="8" 
+                            VerticalOptions="Center"/>
+                </Grid>
+            </Frame>
 
-            <Image Grid.Column="0" Source="github.png"
-                   WidthRequest="25" HeightRequest="25"
-                   VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="GitHub"
-                   FontSize="16" FontAttributes="Bold"
-                   VerticalOptions="Center" Margin="20,0,0,0" />
-        </Grid>
+            <!-- GitHub -->
+            <Frame BackgroundColor="White" 
+                   CornerRadius="17" 
+                   HasShadow="False" 
+                   Padding="0" 
+                   Margin="15,0" 
+                   BorderColor="Transparent">
+                <Grid Padding="20,15" ColumnDefinitions="Auto,*,Auto">
+                    <Image Grid.Column="0" 
+                           Source="github.png" 
+                           WidthRequest="25" 
+                           HeightRequest="25" 
+                           VerticalOptions="Center"/>
+                    <Label Grid.Column="1" 
+                           Text="GitHub" 
+                           FontSize="16" 
+                           FontAttributes="Bold" 
+                           TextColor="#1C1C1E" 
+                           VerticalOptions="Center" 
+                           Margin="10,0,0,0"/>
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnGitHubTapped"/>
+                    </Grid.GestureRecognizers>
+                </Grid>
+            </Frame>
 
-    </VerticalStackLayout>
+            <!-- Legal / Informativo -->
+            <Frame BackgroundColor="White" 
+                   CornerRadius="17" 
+                   HasShadow="False" 
+                   Padding="0" 
+                   Margin="15,0" 
+                   BorderColor="Transparent">
+                <Grid Padding="20,15" ColumnDefinitions="Auto,*,Auto">
+                    <Image Grid.Column="0" 
+                           Source="legal.png" 
+                           WidthRequest="25" 
+                           HeightRequest="25" 
+                           VerticalOptions="Center"/>
+                    <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0">
+                        <Label Text="Legal" 
+                               FontSize="16" 
+                               FontAttributes="Bold" 
+                               TextColor="#1C1C1E"/>
+                        <Label Text="Termos de uso" 
+                               FontSize="14" 
+                               TextColor="#8E8E93">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTermsTapped"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
+            <!-- Sobre o App -->
+            <Frame BackgroundColor="White" 
+                   CornerRadius="17" 
+                   HasShadow="False" 
+                   Padding="0" 
+                   Margin="15,0" 
+                   BorderColor="Transparent">
+                <Grid Padding="20,15" ColumnDefinitions="Auto,*,Auto">
+                    <Image Grid.Column="0" 
+                           Source="info.png" 
+                           WidthRequest="25" 
+                           HeightRequest="25" 
+                           VerticalOptions="Center"/>
+                    <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0">
+                        <Label Text="Sobre o App" 
+                               FontSize="16" 
+                               FontAttributes="Bold" 
+                               TextColor="#1C1C1E"/>
+                        <Label Text="TrackLite v1.0 - Acompanhe suas atividades" 
+                               FontSize="14" 
+                               TextColor="#8E8E93" 
+                               Margin="0,5,0,0"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

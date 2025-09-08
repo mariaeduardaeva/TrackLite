@@ -1,4 +1,7 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
+using System;
+using System.Collections.Generic;
 
 namespace TrackLite
 {
@@ -13,6 +16,30 @@ namespace TrackLite
         {
             var url = "https://github.com/mariaeduardaeva/TrackLite/tree/master";
             await Launcher.Default.OpenAsync(url);
+        }
+
+        private async void OnFeedbackClicked(object sender, EventArgs e)
+        {
+            var email = new EmailMessage
+            {
+                Subject = "Feedback - TrackLite",
+                Body = "",
+                To = new List<string> { "suporte@tracklite.com" }
+            };
+            await Email.Default.ComposeAsync(email);
+        }
+
+        private void OnDarkModeToggled(object sender, ToggledEventArgs e)
+        {
+            if (e.Value)
+                App.Current.UserAppTheme = AppTheme.Dark;
+            else
+                App.Current.UserAppTheme = AppTheme.Light;
+        }
+
+        private async void OnTermsTapped(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new LegalPage());
         }
     }
 }

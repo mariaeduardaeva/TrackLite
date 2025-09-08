@@ -83,6 +83,9 @@
 	  <MauiXaml Update="HistoricoPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="LegalPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="LixoPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
