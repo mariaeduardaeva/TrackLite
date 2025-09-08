@@ -73,7 +73,7 @@
                                    Margin="0,0,10,0"/>
 
                             <!-- Cabecalho -->
-                            <Label Text="Distancia" 
+                            <Label Text="Dist&#226;ncia" 
                                    Grid.Row="0" 
                                    Grid.Column="1"
                                    FontSize="16"
