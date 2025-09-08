@@ -11,7 +11,7 @@
        Shell.ForegroundColor="Black"
        Shell.NavBarHasShadow="False">
 
-    <!-- Navegação -->
+    <!-- Navegacao -->
     <TabBar >
         <Tab Title="Home" Icon="home.png">
             <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />

@@ -52,7 +52,7 @@
                            HorizontalOptions="Center"/>
                 </StackLayout>
 
-                <!-- Distância e pace -->
+                <!-- Distancia e pace -->
                 <StackLayout Grid.Row="1"
                              Orientation="Horizontal"
                              HorizontalOptions="Center"
@@ -88,7 +88,7 @@
             </Grid>
         </Border>
 
-        <!-- Botões -->
+        <!-- Botoes -->
         <Grid ColumnDefinitions="*,*,*"
               HorizontalOptions="Center"
               VerticalOptions="End"

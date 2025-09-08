@@ -6,7 +6,7 @@
              Title="Detalhes da Corrida">
 
     <ContentPage.ToolbarItems>
-        <!-- Botão Download -->
+        <!-- Botao Download -->
         <ToolbarItem IconImageSource="download.png"
                      Order="Primary"
                      Priority="1"
@@ -16,7 +16,7 @@
     <ScrollView>
         <StackLayout Padding="20" Spacing="20">
 
-            <!-- Card do gráfico -->
+            <!-- Card do grafico -->
             <Frame CornerRadius="25"
                    HasShadow="False"
                    Padding="15"

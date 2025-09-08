@@ -78,7 +78,7 @@
                                    HeightRequest="21"
                                    VerticalOptions="Center"/>
 
-                            <!-- Cabeçalho -->
+                            <!-- Cabecalho -->
                             <Label Text="Distância" 
                                    Grid.Row="0" 
                                    Grid.Column="1"
@@ -103,7 +103,7 @@
                                    FontSize="16"
                                    TextColor="black"/>
 
-                            <!-- Horário da Corrida -->
+                            <!-- Horario da Corrida -->
                             <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
                                    Grid.RowSpan="2" 
                                    Grid.Column="3"

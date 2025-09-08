@@ -11,7 +11,7 @@
                     IsGrouped="True"
                     SelectionMode="None">
 
-        <!-- Cabeçalho do grupo (Data) -->
+        <!-- Cabecalho do grupo (Data) -->
         <CollectionView.GroupHeaderTemplate>
             <DataTemplate>
                 <Label Text="{Binding DataChave}" 
@@ -72,7 +72,7 @@
                                    VerticalOptions="Center"
                                    Margin="0,0,10,0"/>
 
-                            <!-- Cabeçalho -->
+                            <!-- Cabecalho -->
                             <Label Text="Distancia" 
                                    Grid.Row="0" 
                                    Grid.Column="1"
@@ -98,7 +98,7 @@
                                    FontSize="16"
                                    TextColor="Black"/>
 
-                            <!-- Horário da corrida -->
+                            <!-- Horario da corrida -->
                             <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
                                    Grid.RowSpan="2" 
                                    Grid.Column="3"
