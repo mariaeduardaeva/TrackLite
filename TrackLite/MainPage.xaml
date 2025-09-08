@@ -11,7 +11,7 @@
                HasShadow="False" 
                Padding="0" 
                BackgroundColor="GREY" 
-               Margin="12">
+               Margin="12,27">
             <Label Text="Mapa aqui" 
                    HorizontalOptions="Center" 
                    VerticalOptions="Center" 
@@ -19,17 +19,22 @@
                    FontAttributes="Bold"/>
         </Frame>
 
-        <!-- FRAME BRANCO -->
-        <Frame BackgroundColor="#FCFCFC"
-               CornerRadius="20"
-               Padding="15"
-               Margin="20"
-               VerticalOptions="End"
-               HorizontalOptions="Fill"
-               HasShadow="True"
-               ZIndex="1">
+        <!-- BORDER BRANCO COM SOMBRA -->
+        <Border StrokeThickness="0"
+                BackgroundColor="#FCFCFC"
+                StrokeShape="RoundRectangle 20"
+                Margin="20, 35"
+                VerticalOptions="End"
+                HorizontalOptions="Fill">
 
-            <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+            <Border.Shadow>
+                <Shadow Brush="Black"
+                        Opacity="0.3"
+                        Offset="0,4"
+                        Radius="10"/>
+            </Border.Shadow>
+
+            <Grid RowDefinitions="Auto,Auto" Padding="15" RowSpacing="10">
 
                 <!-- TEMPO -->
                 <StackLayout Grid.Row="0"
@@ -51,7 +56,7 @@
                 <StackLayout Grid.Row="1"
                              Orientation="Horizontal"
                              HorizontalOptions="Center"
-                             Spacing="100">
+                             Spacing="160">
 
                     <StackLayout>
                         <Label Text="Distância"
@@ -81,20 +86,19 @@
                 </StackLayout>
 
             </Grid>
-        </Frame>
+        </Border>
 
         <!-- BOTÕES -->
         <Grid ColumnDefinitions="*,*,*"
               HorizontalOptions="Center"
               VerticalOptions="End"
-              Margin="0,0,0,5"
-              ZIndex="2">
-            <!-- ZIndex maior que o Frame -->
+              Margin="0,0,0,0"
+              ColumnSpacing="7">
 
             <Button BackgroundColor="#214F4B"
                     CornerRadius="20"
-                    HeightRequest="55"
-                    WidthRequest="55">
+                    HeightRequest="50"
+                    WidthRequest="50">
                 <Button.ImageSource>
                     <FileImageSource File="lixo.png"/>
                 </Button.ImageSource>
@@ -103,8 +107,8 @@
             <Button Grid.Column="1"
                     BackgroundColor="#214F4B"
                     CornerRadius="20"
-                    HeightRequest="60"
-                    WidthRequest="60"
+                    HeightRequest="55"
+                    WidthRequest="55"
                     TranslationY="-5">
                 <Button.ImageSource>
                     <FileImageSource File="playy.png"/>
@@ -114,8 +118,8 @@
             <Button Grid.Column="2"
                     BackgroundColor="#214F4B"
                     CornerRadius="20"
-                    HeightRequest="55"
-                    WidthRequest="55">
+                    HeightRequest="50"
+                    WidthRequest="50">
                 <Button.ImageSource>
                     <FileImageSource File="salvar.png"/>
                 </Button.ImageSource>

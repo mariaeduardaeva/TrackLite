@@ -28,15 +28,6 @@ namespace TrackLite
             };
             await Email.Default.ComposeAsync(email);
         }
-
-        private void OnDarkModeToggled(object sender, ToggledEventArgs e)
-        {
-            if (e.Value)
-                App.Current.UserAppTheme = AppTheme.Dark;
-            else
-                App.Current.UserAppTheme = AppTheme.Light;
-        }
-
         private async void OnTermsTapped(object sender, EventArgs e)
         {
             await Navigation.PushAsync(new LegalPage());
