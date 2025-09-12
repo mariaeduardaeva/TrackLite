@@ -1,23 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
              x:Class="TrackLite.MainPage"
              BackgroundColor="#F2F2F2">
 
     <Grid>
 
-        <!-- Placeholder mapa -->
-        <Frame CornerRadius="25" 
-               HasShadow="False" 
-               Padding="0" 
-               BackgroundColor="GREY" 
-               Margin="12,27">
-            <Label Text="Mapa aqui" 
-                   HorizontalOptions="Center" 
-                   VerticalOptions="Center" 
-                   TextColor="BLACK" 
-                   FontAttributes="Bold"/>
-        </Frame>
+        <!-- Mapa -->
+        <mapsui:MapControl x:Name="mapView"
+                           Margin="12,27"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"
+                           />
 
         <!-- Frame branco -->
         <Border StrokeThickness="0"
@@ -59,7 +54,7 @@
                              Spacing="160">
 
                     <StackLayout>
-                        <Label Text="Distância"
+                        <Label Text="DistÃ¢ncia"
                                FontAttributes="Bold"
                                FontSize="18"
                                TextColor="#214F4B"
