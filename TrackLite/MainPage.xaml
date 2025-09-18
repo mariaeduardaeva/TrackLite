@@ -39,7 +39,8 @@
                            FontSize="18"
                            TextColor="#214F4B"
                            HorizontalOptions="Center"/>
-                    <Label Text="03h 10m"
+                    <Label x:Name="TempoLabel"
+                           Text="00:00:00"
                            FontAttributes="Bold"
                            FontSize="24"
                            TextColor="Black"
@@ -58,7 +59,8 @@
                                FontSize="18"
                                TextColor="#214F4B"
                                HorizontalOptions="Center"/>
-                        <Label Text="10km"
+                        <Label x:Name="DistanciaLabel"
+                               Text="0 km"
                                FontAttributes="Bold"
                                FontSize="14"
                                TextColor="Black"
@@ -71,7 +73,8 @@
                                FontSize="18"
                                TextColor="#214F4B"
                                HorizontalOptions="Center"/>
-                        <Label Text="5:03"
+                        <Label x:Name="PaceLabel"
+                               Text="0:00"
                                FontAttributes="Bold"
                                FontSize="14"
                                TextColor="Black"
@@ -84,34 +87,44 @@
                       HorizontalOptions="Center"
                       ColumnSpacing="7">
 
-                    <Button BackgroundColor="#214F4B"
+                    <!-- Deletar Rota -->
+                    <Button x:Name="DeleteButton"
+                            BackgroundColor="#214F4B"
                             CornerRadius="20"
                             HeightRequest="50"
-                            WidthRequest="50">
+                            WidthRequest="50"
+                            Clicked="DeletarRota_Clicked">
                         <Button.ImageSource>
                             <FileImageSource File="lixo.png"/>
                         </Button.ImageSource>
                     </Button>
 
-                    <Button Grid.Column="1"
+                    <!-- Iniciar / Pausar -->
+                    <Button x:Name="PlayPauseButton"
+                            Grid.Column="1"
                             BackgroundColor="#214F4B"
                             CornerRadius="20"
                             HeightRequest="55"
-                            WidthRequest="55">
+                            WidthRequest="55"
+                            Clicked="PlayPauseButton_Clicked">
                         <Button.ImageSource>
                             <FileImageSource File="playy.png"/>
                         </Button.ImageSource>
                     </Button>
 
-                    <Button Grid.Column="2"
+                    <!-- Salvar -->
+                    <Button x:Name="SaveButton"
+                            Grid.Column="2"
                             BackgroundColor="#214F4B"
                             CornerRadius="20"
                             HeightRequest="50"
-                            WidthRequest="50">
+                            WidthRequest="50"
+                            Clicked="SaveButton_Clicked">
                         <Button.ImageSource>
                             <FileImageSource File="salvar.png"/>
                         </Button.ImageSource>
                     </Button>
+
                 </Grid>
 
             </Grid>
