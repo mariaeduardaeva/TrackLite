@@ -82,51 +82,51 @@
                 </StackLayout>
 
                 <!-- Botões -->
-                <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*"
-                      HorizontalOptions="Center"
-                      ColumnSpacing="7">
+                <Grid Grid.Row="2" HorizontalOptions="Fill">
 
-                    <!-- Deletar Rota -->
-                    <Button x:Name="DeleteButton"
-                            BackgroundColor="#214F4B"
-                            CornerRadius="20"
-                            HeightRequest="50"
-                            WidthRequest="50"
-                            Clicked="DeletarRota_Clicked">
-                        <Button.ImageSource>
-                            <FileImageSource File="lixo.png"/>
-                        </Button.ImageSource>
-                    </Button>
+                    <!-- Stack dos 3 primeiros botões centralizados -->
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="7">
+                        <!-- Deletar Rota -->
+                        <Button x:Name="DeleteButton"
+                                BackgroundColor="#214F4B"
+                                CornerRadius="20"
+                                HeightRequest="50"
+                                WidthRequest="50"
+                                Clicked="DeletarRota_Clicked">
+                            <Button.ImageSource>
+                                <FileImageSource File="lixo.png"/>
+                            </Button.ImageSource>
+                        </Button>
 
-                    <!-- Iniciar / Pausar -->
-                    <Button x:Name="PlayPauseButton"
-                            Grid.Column="1"
-                            BackgroundColor="#214F4B"
-                            CornerRadius="20"
-                            HeightRequest="55"
-                            WidthRequest="55"
-                            Clicked="PlayPauseButton_Clicked">
-                        <Button.ImageSource>
-                            <FileImageSource File="playy.png"/>
-                        </Button.ImageSource>
-                    </Button>
+                        <!-- Iniciar / Pausar -->
+                        <Button x:Name="PlayPauseButton"
+                                BackgroundColor="#214F4B"
+                                CornerRadius="20"
+                                HeightRequest="55"
+                                WidthRequest="55"
+                                Clicked="PlayPauseButton_Clicked">
+                            <Button.ImageSource>
+                                <FileImageSource File="playy.png"/>
+                            </Button.ImageSource>
+                        </Button>
 
-                    <!-- Salvar -->
-                    <Button x:Name="SaveButton"
-                            Grid.Column="2"
-                            BackgroundColor="#214F4B"
-                            CornerRadius="20"
-                            HeightRequest="50"
-                            WidthRequest="50"
-                            Clicked="SaveButton_Clicked">
-                        <Button.ImageSource>
-                            <FileImageSource File="salvar.png"/>
-                        </Button.ImageSource>
-                    </Button>
+                        <!-- Salvar -->
+                        <Button x:Name="SaveButton"
+                                BackgroundColor="#214F4B"
+                                CornerRadius="20"
+                                HeightRequest="50"
+                                WidthRequest="50"
+                                Clicked="SaveButton_Clicked">
+                            <Button.ImageSource>
+                                <FileImageSource File="salvar.png"/>
+                            </Button.ImageSource>
+                        </Button>
+                    </StackLayout>
 
                     <!-- Localização -->
                     <Button x:Name="LocalButton"
-                            Grid.Column="3"
+                            HorizontalOptions="End"
+                            Margin="0,0,10,0"
                             BackgroundColor="#214F4B"
                             CornerRadius="20"
                             HeightRequest="50"

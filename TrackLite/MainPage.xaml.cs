@@ -7,6 +7,7 @@ using Mapsui.Styles;
 using Mapsui.Tiling;
 using Mapsui.UI.Maui;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Devices; // <── Adicionado para Vibrate
 using NetTopologySuite.Geometries;
 using System.Text.Json;
 using System.Timers;
@@ -28,6 +29,9 @@ namespace TrackLite
         private TimeSpan tempoDecorrido = TimeSpan.Zero;
 
         private CancellationTokenSource trackingCts;
+
+        // <── Novo campo para controlar vibração
+        private double ultimaDistanciaVibrada = 0.0; // em km
 
         public MainPage()
         {
@@ -163,6 +167,7 @@ namespace TrackLite
             usuarioLayer.Features = new List<IFeature>();
             tempoDecorrido = TimeSpan.Zero;
             tempoTimer.Start();
+            ultimaDistanciaVibrada = 0.0; // <── reset
 
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
@@ -265,6 +270,7 @@ namespace TrackLite
             TempoLabel.Text = "00:00:00";
             DistanciaLabel.Text = "0 km";
             PaceLabel.Text = "0:00";
+            ultimaDistanciaVibrada = 0.0; // <── reset aqui também
 
             await BotaoAnimadoAsync(DeleteButton);
         }
@@ -284,6 +290,13 @@ namespace TrackLite
 
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
+
+            // <── Vibração a cada 1 km
+            if (distanciaKm - ultimaDistanciaVibrada >= 1.0)
+            {
+                ultimaDistanciaVibrada = Math.Floor(distanciaKm);
+                Vibrar();
+            }
 
             if (distanciaKm > 0)
             {
@@ -314,5 +327,22 @@ namespace TrackLite
         }
 
         private double ToRad(double deg) => deg * Math.PI / 180.0;
+
+        // <── Método de vibração
+        private void Vibrar()
+        {
+            try
+            {
+                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500)); // vibra 0,5 s
+            }
+            catch (FeatureNotSupportedException)
+            {
+                // dispositivo não suporta vibração
+            }
+            catch (Exception)
+            {
+                // outra exceção
+            }
+        }
     }
 }
