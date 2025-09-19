@@ -49,11 +49,11 @@ namespace TrackLite
             };
             mapView.Map.Layers.Add(rotaLayer);
 
-            // Camada do usuário (cada ponto terá SymbolStyle)
+            // Camada do usuário
             usuarioLayer = new MemoryLayer
             {
                 Name = "Usuário",
-                Style = null, // cada ponto terá seu próprio SymbolStyle
+                Style = null,
                 Features = new List<IFeature>()
             };
             mapView.Map.Layers.Add(usuarioLayer);
@@ -71,8 +71,8 @@ namespace TrackLite
                     mapView.Map.Navigator.ZoomTo(MaxZoomLevel);
             };
 
-            // Inicializa timer do tempo
-            tempoTimer = new System.Timers.Timer(1000); // 1 segundo
+            // Inicializa timer
+            tempoTimer = new System.Timers.Timer(1000);
             tempoTimer.Elapsed += (s, e) =>
             {
                 tempoDecorrido = tempoDecorrido.Add(TimeSpan.FromSeconds(1));
@@ -84,6 +84,24 @@ namespace TrackLite
             };
         }
 
+        // ------------------- Animação do botão -------------------
+        private async Task TrocarIconeComBounceAsync(Button botao, string novoArquivo)
+        {
+            // Fade out
+            await botao.FadeTo(0, 150);
+
+            // Troca a imagem
+            botao.ImageSource = ImageSource.FromFile(novoArquivo);
+
+            // Fade in
+            await botao.FadeTo(1, 150);
+
+            // Pulo mais suave
+            await botao.ScaleTo(1.08, 180, Easing.CubicOut); // sobe levemente e mais devagar
+            await botao.ScaleTo(1.0, 180, Easing.CubicOut);  // volta suavemente
+        }
+
+        // ------------------- Localização -------------------
         private async Task CenterOnUserLocation()
         {
             try
@@ -96,7 +114,6 @@ namespace TrackLite
                     var merc = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
                     var userPoint = new MPoint(merc.x, merc.y);
 
-                    // Cores para o ponto do usuário
                     var corUsuario = Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72);
                     var corContorno = Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4);
 
@@ -115,7 +132,6 @@ namespace TrackLite
                     };
 
                     usuarioLayer.Features = new List<IFeature> { pontoFeature };
-
                     mapView.RefreshGraphics();
                     mapView.Map.Navigator.CenterOn(userPoint);
                     mapView.Map.Navigator.ZoomTo(15);
@@ -127,9 +143,12 @@ namespace TrackLite
             }
         }
 
+        // ------------------- Tracking -------------------
         private async Task StartTracking()
         {
             isTracking = true;
+            await TrocarIconeComBounceAsync(PlayPauseButton, "pausar.png");
+
             pontosRota.Clear();
             rotaLayer.Features = new List<IFeature>();
             usuarioLayer.Features = new List<IFeature>();
@@ -158,7 +177,6 @@ namespace TrackLite
 
                             pontosRota.Add(ponto);
 
-                            // Atualiza a rota
                             if (pontosRota.Count >= 2)
                             {
                                 var coords = pontosRota.Select(p => new Coordinate(p.X, p.Y)).ToArray();
@@ -166,7 +184,6 @@ namespace TrackLite
                                 rotaLayer.Features = new List<IFeature> { new GeometryFeature { Geometry = line } };
                             }
 
-                            // Atualiza ponto do usuário
                             var pontoFeature = new GeometryFeature
                             {
                                 Geometry = new NetTopologySuite.Geometries.Point(ponto.X, ponto.Y),
@@ -184,7 +201,6 @@ namespace TrackLite
 
                             mapView.RefreshGraphics();
                             mapView.Map.Navigator.CenterOn(ponto);
-
                             AtualizarDistanciaEPace();
                         }
                     }
@@ -196,28 +212,27 @@ namespace TrackLite
             catch (TaskCanceledException) { }
             finally
             {
-                tempoTimer.Stop();
-                isTracking = false;
+                StopTracking();
             }
         }
 
-        private void StopTracking()
+        private async void StopTracking()
         {
+            if (!isTracking) return;
+
             trackingCts?.Cancel();
+            isTracking = false;
+            await TrocarIconeComBounceAsync(PlayPauseButton, "playy.png");
+            tempoTimer.Stop();
         }
 
-        private void PlayPauseButton_Clicked(object sender, EventArgs e)
+        // ------------------- Botões -------------------
+        private async void PlayPauseButton_Clicked(object sender, EventArgs e)
         {
             if (!isTracking)
-            {
-                _ = StartTracking();
-                PlayPauseButton.ImageSource = ImageSource.FromFile("pausar.png");
-            }
+                await StartTracking();
             else
-            {
                 StopTracking();
-                PlayPauseButton.ImageSource = ImageSource.FromFile("playy.png");
-            }
         }
 
         private void SaveButton_Clicked(object sender, EventArgs e)
@@ -226,12 +241,11 @@ namespace TrackLite
                 StopTracking();
 
             DisplayAlert("Salvar Rota", "Rota salva! Iria para a página de histórico.", "OK");
-
-            PlayPauseButton.ImageSource = ImageSource.FromFile("playy.png");
         }
 
         private void DeletarRota_Clicked(object sender, EventArgs e)
         {
+            StopTracking();
             pontosRota.Clear();
             rotaLayer.Features = new List<IFeature>();
             usuarioLayer.Features = new List<IFeature>();
@@ -242,6 +256,7 @@ namespace TrackLite
             PaceLabel.Text = "0:00";
         }
 
+        // ------------------- Distância e Pace -------------------
         private void AtualizarDistanciaEPace()
         {
             double distancia = 0;

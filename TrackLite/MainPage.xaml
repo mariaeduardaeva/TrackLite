@@ -12,7 +12,7 @@
                            HorizontalOptions="Fill"
                            VerticalOptions="Fill"/>
 
-        <!-- Frame branco -->
+        <!-- Frame branco com informações e botões -->
         <Border StrokeThickness="0"
                 BackgroundColor="#FCFCFC"
                 StrokeShape="RoundRectangle 20"
@@ -27,7 +27,6 @@
                         Radius="10"/>
             </Border.Shadow>
 
-            <!-- Grid interno do Border -->
             <Grid RowDefinitions="Auto,Auto,Auto" Padding="15" RowSpacing="10">
 
                 <!-- Tempo -->
