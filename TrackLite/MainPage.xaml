@@ -82,7 +82,7 @@
                 </StackLayout>
 
                 <!-- Botões -->
-                <Grid Grid.Row="2" ColumnDefinitions="*,*,*"
+                <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*"
                       HorizontalOptions="Center"
                       ColumnSpacing="7">
 
@@ -121,6 +121,19 @@
                             Clicked="SaveButton_Clicked">
                         <Button.ImageSource>
                             <FileImageSource File="salvar.png"/>
+                        </Button.ImageSource>
+                    </Button>
+
+                    <!-- Localização -->
+                    <Button x:Name="LocalButton"
+                            Grid.Column="3"
+                            BackgroundColor="#214F4B"
+                            CornerRadius="20"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Clicked="LocalButton_Clicked">
+                        <Button.ImageSource>
+                            <FileImageSource File="local.png"/>
                         </Button.ImageSource>
                     </Button>
 

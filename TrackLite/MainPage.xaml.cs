@@ -101,6 +101,15 @@ namespace TrackLite
             await botao.ScaleTo(1.0, 180, Easing.CubicOut);  // volta suavemente
         }
 
+        private async Task BotaoAnimadoAsync(Button botao)
+        {
+            // Para botões que não trocam ícone
+            await botao.FadeTo(0.6, 100);
+            await botao.FadeTo(1, 100);
+            await botao.ScaleTo(1.08, 180, Easing.CubicOut);
+            await botao.ScaleTo(1.0, 180, Easing.CubicOut);
+        }
+
         // ------------------- Localização -------------------
         private async Task CenterOnUserLocation()
         {
@@ -235,15 +244,17 @@ namespace TrackLite
                 StopTracking();
         }
 
-        private void SaveButton_Clicked(object sender, EventArgs e)
+        private async void SaveButton_Clicked(object sender, EventArgs e)
         {
             if (isTracking)
                 StopTracking();
 
             DisplayAlert("Salvar Rota", "Rota salva! Iria para a página de histórico.", "OK");
+
+            await BotaoAnimadoAsync(SaveButton);
         }
 
-        private void DeletarRota_Clicked(object sender, EventArgs e)
+        private async void DeletarRota_Clicked(object sender, EventArgs e)
         {
             StopTracking();
             pontosRota.Clear();
@@ -254,6 +265,14 @@ namespace TrackLite
             TempoLabel.Text = "00:00:00";
             DistanciaLabel.Text = "0 km";
             PaceLabel.Text = "0:00";
+
+            await BotaoAnimadoAsync(DeleteButton);
+        }
+
+        private async void LocalButton_Clicked(object sender, EventArgs e)
+        {
+            await CenterOnUserLocation();
+            await BotaoAnimadoAsync(LocalButton);
         }
 
         // ------------------- Distância e Pace -------------------
