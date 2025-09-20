@@ -17,13 +17,17 @@ using Microsoft.Maui.Storage;
 using NetTopologySuite.Geometries;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
+using System.IO;
 
 namespace TrackLite
 {
     public partial class MainPage : ContentPage
     {
-        private const double MinZoomLevel = 1;
-        private const double MaxZoomLevel = 20;
+        // ZOOM como índices (níveis OSM). Ex.: 10..18
+        private const int MinZoomLevel = 10;
+        private const int MaxZoomLevel = 18;
 
         private bool isTracking = false;
         private readonly List<MPoint> pontosRota = new();
@@ -42,6 +46,9 @@ namespace TrackLite
 
             // Inicializa mapa
             mapView.Map = new Mapsui.Map();
+
+            // Configura limites de zoom/resolutions compatíveis com OSM/GlobalSphericalMercator
+            SetupZoomLimits();
 
             // Tile Layer híbrido online/offline
             AddHybridTileLayer();
@@ -87,7 +94,80 @@ namespace TrackLite
             };
         }
 
-        // ------------------- ForeGround -------------------
+        // ------------------- Setup Zoom Limits (Mapsui v4) -------------------
+        private void SetupZoomLimits()
+        {
+            try
+            {
+                var navigator = mapView.Map.Navigator;
+
+                // usa as resolutions do esquema GlobalSphericalMercator (OSM)
+                var mercator = new GlobalSphericalMercator();
+                var mercResolutions = mercator.Resolutions.Select(r => r.Value.UnitsPerPixel).ToList();
+
+                // override das resolutions para garantir consistência com tiles OSM
+                navigator.OverrideResolutions = mercResolutions;
+
+                // garante índices válidos
+                int minIdx = Math.Max(0, MinZoomLevel);
+                int maxIdx = Math.Min(mercResolutions.Count - 1, MaxZoomLevel);
+                if (minIdx > maxIdx) (minIdx, maxIdx) = (maxIdx, minIdx);
+
+                // para MMinMax: Min é a menor resolução (mais "zoom in"), Max é a maior (mais "zoom out")
+                double minResolution = mercResolutions[maxIdx]; // resolução do nível mais "alto" (ex.: 18)
+                double maxResolution = mercResolutions[minIdx]; // resolução do nível mais "baixo" (ex.: 10)
+
+                navigator.OverrideZoomBounds = new MMinMax(minResolution, maxResolution);
+
+                // Opcional: força o limiter para manter dentro do extent (evita "white borders")
+                // navigator.Limiter = new ViewportLimiterKeepWithinExtent();
+            }
+            catch
+            {
+                // se algo falhar, apenas não aplicamos limites — evitar crash em runtime
+            }
+        }
+
+        // ------------------- Helpers Zoom level/resolution -------------------
+        private int GetClosestZoomLevelIndex()
+        {
+            var navigator = mapView.Map.Navigator;
+            var resolutions = navigator.Resolutions;
+            if (resolutions == null || resolutions.Count == 0)
+                return -1;
+
+            double currentRes = navigator.Viewport.Resolution;
+            int bestIndex = 0;
+            double bestDiff = double.MaxValue;
+            for (int i = 0; i < resolutions.Count; i++)
+            {
+                var diff = Math.Abs(resolutions[i] - currentRes);
+                if (diff < bestDiff)
+                {
+                    bestDiff = diff;
+                    bestIndex = i;
+                }
+            }
+            return bestIndex;
+        }
+
+        private void EnsureZoomWithinBounds()
+        {
+            try
+            {
+                var navigator = mapView.Map.Navigator;
+                int current = GetClosestZoomLevelIndex();
+                if (current < 0) return;
+
+                if (current < MinZoomLevel)
+                    navigator.ZoomToLevel(MinZoomLevel);
+                else if (current > MaxZoomLevel)
+                    navigator.ZoomToLevel(MaxZoomLevel);
+            }
+            catch { }
+        }
+
+        // ------------------- Persistência -------------------
         private void SalvarEstado()
         {
             try
@@ -140,6 +220,9 @@ namespace TrackLite
                         };
                         mapView.RefreshGraphics();
                         mapView.Map.Navigator.CenterOn(ultimo);
+
+                        // garante que o zoom automático respeite limites
+                        EnsureZoomWithinBounds();
                     }
                 }
 
@@ -195,19 +278,27 @@ namespace TrackLite
         // ------------------- Animação Botões -------------------
         private async Task TrocarIconeComBounceAsync(Button botao, string novoArquivo)
         {
-            await botao.FadeTo(0, 150);
-            botao.ImageSource = ImageSource.FromFile(novoArquivo);
-            await botao.FadeTo(1, 150);
-            await botao.ScaleTo(1.08, 180, Easing.CubicOut);
-            await botao.ScaleTo(1.0, 180, Easing.CubicOut);
+            try
+            {
+                await botao.FadeTo(0, 150);
+                botao.ImageSource = ImageSource.FromFile(novoArquivo);
+                await botao.FadeTo(1, 150);
+                await botao.ScaleTo(1.08, 180, Easing.CubicOut);
+                await botao.ScaleTo(1.0, 180, Easing.CubicOut);
+            }
+            catch { }
         }
 
         private async Task BotaoAnimadoAsync(Button botao)
         {
-            await botao.FadeTo(0.6, 100);
-            await botao.FadeTo(1, 100);
-            await botao.ScaleTo(1.08, 180, Easing.CubicOut);
-            await botao.ScaleTo(1.0, 180, Easing.CubicOut);
+            try
+            {
+                await botao.FadeTo(0.6, 100);
+                await botao.FadeTo(1, 100);
+                await botao.ScaleTo(1.08, 180, Easing.CubicOut);
+                await botao.ScaleTo(1.0, 180, Easing.CubicOut);
+            }
+            catch { }
         }
 
         // ------------------- Localização -------------------
@@ -243,7 +334,9 @@ namespace TrackLite
                     usuarioLayer.Features = new List<IFeature> { pontoFeature };
                     mapView.RefreshGraphics();
                     mapView.Map.Navigator.CenterOn(userPoint);
-                    mapView.Map.Navigator.ZoomTo(15);
+
+                    // aplica zoom apenas se fora do limite atual
+                    EnsureZoomWithinBounds();
                 }
             }
             catch (Exception ex)
@@ -314,6 +407,10 @@ namespace TrackLite
 
                             mapView.RefreshGraphics();
                             mapView.Map.Navigator.CenterOn(ponto);
+
+                            // garante que o zoom esteja dentro dos limites definidos
+                            EnsureZoomWithinBounds();
+
                             AtualizarDistanciaEPace();
                             SalvarEstado();
                         }
@@ -389,18 +486,33 @@ namespace TrackLite
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
 
+            // Vibração a cada km
             if (distanciaKm - ultimaDistanciaVibrada >= 1.0)
             {
                 ultimaDistanciaVibrada = Math.Floor(distanciaKm);
                 Vibrar();
             }
 
-            if (distanciaKm > 0)
+            // Cálculo do pace com proteção para distâncias pequenas
+            const double minDistanceKm = 0.2; // só calcula pace a partir de 200m
+
+            if (distanciaKm >= minDistanceKm && tempoDecorrido.TotalSeconds > 0)
             {
-                double paceSegundos = tempoDecorrido.TotalSeconds / distanciaKm;
-                int paceMin = (int)(paceSegundos / 60);
-                int paceSec = (int)(paceSegundos % 60);
+                double paceSegundosPorKm = tempoDecorrido.TotalSeconds / distanciaKm;
+                int paceMin = (int)Math.Floor(paceSegundosPorKm / 60);
+                int paceSec = (int)Math.Round(paceSegundosPorKm % 60);
+
+                if (paceSec == 60)
+                {
+                    paceSec = 0;
+                    paceMin++;
+                }
+
                 PaceLabel.Text = $"{paceMin}:{paceSec:D2}";
+            }
+            else
+            {
+                PaceLabel.Text = "0:00";
             }
         }
 
