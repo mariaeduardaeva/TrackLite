@@ -1,17 +1,22 @@
-﻿using Mapsui;
+﻿// BruTile
+using BruTile.Cache;
+using BruTile.Predefined;
+using BruTile.Web;
+using Mapsui;
 using Mapsui.Layers;
 using Mapsui.Nts;
 using Mapsui.Projections;
 using Mapsui.Providers;
 using Mapsui.Styles;
 using Mapsui.Tiling;
+using Mapsui.Tiling.Layers;
 using Mapsui.UI.Maui;
 using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Devices; // <── Adicionado para Vibrate
+using Microsoft.Maui.Devices;
 using NetTopologySuite.Geometries;
 using System.Text.Json;
-using System.Timers;
 using System.Threading;
+using System.Timers;
 
 namespace TrackLite
 {
@@ -21,27 +26,27 @@ namespace TrackLite
         private const double MaxZoomLevel = 20;
 
         private bool isTracking = false;
-        private List<MPoint> pontosRota = new List<MPoint>();
+        private readonly List<MPoint> pontosRota = new();
         private MemoryLayer rotaLayer;
         private MemoryLayer usuarioLayer;
 
-        private System.Timers.Timer tempoTimer;
+        private readonly System.Timers.Timer tempoTimer;
         private TimeSpan tempoDecorrido = TimeSpan.Zero;
 
         private CancellationTokenSource trackingCts;
-
-        // <── Novo campo para controlar vibração
-        private double ultimaDistanciaVibrada = 0.0; // em km
+        private double ultimaDistanciaVibrada = 0.0;
 
         public MainPage()
         {
             InitializeComponent();
 
             // Inicializa mapa
-            mapView.Map ??= new Mapsui.Map();
-            mapView.Map.Layers.Add(OpenStreetMap.CreateTileLayer());
+            mapView.Map = new Mapsui.Map();
 
-            // Camada da rota (linha #214F4B)
+            // Tile Layer híbrido online/offline
+            AddHybridTileLayer();
+
+            // Camada da rota
             rotaLayer = new MemoryLayer
             {
                 Name = "Rota",
@@ -62,18 +67,7 @@ namespace TrackLite
             };
             mapView.Map.Layers.Add(usuarioLayer);
 
-            // Centraliza no usuário ao carregar
             Loaded += async (_, __) => await CenterOnUserLocation();
-
-            // Zoom mínimo/máximo
-            mapView.Map.Navigator.ViewportChanged += (_, __) =>
-            {
-                var zoom = mapView.Map.Navigator.Viewport.Resolution;
-                if (zoom < MinZoomLevel)
-                    mapView.Map.Navigator.ZoomTo(MinZoomLevel);
-                if (zoom > MaxZoomLevel)
-                    mapView.Map.Navigator.ZoomTo(MaxZoomLevel);
-            };
 
             // Inicializa timer
             tempoTimer = new System.Timers.Timer(1000);
@@ -88,26 +82,49 @@ namespace TrackLite
             };
         }
 
-        // ------------------- Animação do botão -------------------
+        // Tile Layer híbrido
+        private void AddHybridTileLayer()
+        {
+            var cachePath = Path.Combine(FileSystem.AppDataDirectory, "tilecache");
+            if (!Directory.Exists(cachePath))
+                Directory.CreateDirectory(cachePath);
+
+            var fileCache = new FileCache(cachePath, "png");
+
+            // Esquema + URL OSM
+            var tileSchema = new GlobalSphericalMercator(0, 18);
+            var url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+            var httpTileSource = new HttpTileSource(
+                tileSchema,
+                url,
+                name: "OSM",
+                persistentCache: fileCache);
+
+            var tileLayer = new TileLayer(httpTileSource)
+            {
+                Name = "OSM Online/Offline"
+            };
+
+            // remove tile layers antigos
+            var toRemove = mapView.Map.Layers.OfType<TileLayer>().ToList();
+            foreach (var l in toRemove) mapView.Map.Layers.Remove(l);
+
+            mapView.Map.Layers.Insert(0, tileLayer);
+        }
+
+        // ------------------- Animação dos botões -------------------
         private async Task TrocarIconeComBounceAsync(Button botao, string novoArquivo)
         {
-            // Fade out
             await botao.FadeTo(0, 150);
-
-            // Troca a imagem
             botao.ImageSource = ImageSource.FromFile(novoArquivo);
-
-            // Fade in
             await botao.FadeTo(1, 150);
-
-            // Pulo mais suave
-            await botao.ScaleTo(1.08, 180, Easing.CubicOut); // sobe levemente e mais devagar
-            await botao.ScaleTo(1.0, 180, Easing.CubicOut);  // volta suavemente
+            await botao.ScaleTo(1.08, 180, Easing.CubicOut);
+            await botao.ScaleTo(1.0, 180, Easing.CubicOut);
         }
 
         private async Task BotaoAnimadoAsync(Button botao)
         {
-            // Para botões que não trocam ícone
             await botao.FadeTo(0.6, 100);
             await botao.FadeTo(1, 100);
             await botao.ScaleTo(1.08, 180, Easing.CubicOut);
@@ -167,7 +184,7 @@ namespace TrackLite
             usuarioLayer.Features = new List<IFeature>();
             tempoDecorrido = TimeSpan.Zero;
             tempoTimer.Start();
-            ultimaDistanciaVibrada = 0.0; // <── reset
+            ultimaDistanciaVibrada = 0.0;
 
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
@@ -270,7 +287,7 @@ namespace TrackLite
             TempoLabel.Text = "00:00:00";
             DistanciaLabel.Text = "0 km";
             PaceLabel.Text = "0:00";
-            ultimaDistanciaVibrada = 0.0; // <── reset aqui também
+            ultimaDistanciaVibrada = 0.0;
 
             await BotaoAnimadoAsync(DeleteButton);
         }
@@ -291,7 +308,7 @@ namespace TrackLite
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
 
-            // <── Vibração a cada 1 km
+            // Vibração a cada 1 km
             if (distanciaKm - ultimaDistanciaVibrada >= 1.0)
             {
                 ultimaDistanciaVibrada = Math.Floor(distanciaKm);
@@ -328,20 +345,17 @@ namespace TrackLite
 
         private double ToRad(double deg) => deg * Math.PI / 180.0;
 
-        // <── Método de vibração
         private void Vibrar()
         {
             try
             {
-                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500)); // vibra 0,5 s
+                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
             }
             catch (FeatureNotSupportedException)
             {
-                // dispositivo não suporta vibração
             }
             catch (Exception)
             {
-                // outra exceção
             }
         }
     }

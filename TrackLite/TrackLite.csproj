@@ -74,6 +74,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="BruTile" Version="5.0.6" />
+		<PackageReference Include="BruTile.MbTiles" Version="5.0.6" />
 		<PackageReference Include="Mapsui" Version="4.1.9" />
 		<PackageReference Include="Mapsui.Maui" Version="4.1.9" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
