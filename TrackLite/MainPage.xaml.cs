@@ -25,7 +25,6 @@ namespace TrackLite
 {
     public partial class MainPage : ContentPage
     {
-        // ZOOM como índices (níveis OSM). Ex.: 10..18
         private const int MinZoomLevel = 10;
         private const int MaxZoomLevel = 18;
 
@@ -101,54 +100,19 @@ namespace TrackLite
             {
                 var navigator = mapView.Map.Navigator;
 
-                // usa as resolutions do esquema GlobalSphericalMercator (OSM)
                 var mercator = new GlobalSphericalMercator();
                 var mercResolutions = mercator.Resolutions.Select(r => r.Value.UnitsPerPixel).ToList();
-
-                // override das resolutions para garantir consistência com tiles OSM
                 navigator.OverrideResolutions = mercResolutions;
 
-                // garante índices válidos
                 int minIdx = Math.Max(0, MinZoomLevel);
                 int maxIdx = Math.Min(mercResolutions.Count - 1, MaxZoomLevel);
                 if (minIdx > maxIdx) (minIdx, maxIdx) = (maxIdx, minIdx);
 
-                // para MMinMax: Min é a menor resolução (mais "zoom in"), Max é a maior (mais "zoom out")
-                double minResolution = mercResolutions[maxIdx]; // resolução do nível mais "alto" (ex.: 18)
-                double maxResolution = mercResolutions[minIdx]; // resolução do nível mais "baixo" (ex.: 10)
-
+                double minResolution = mercResolutions[maxIdx]; // nível mais "alto" (zoom in)
+                double maxResolution = mercResolutions[minIdx]; // nível mais "baixo" (zoom out)
                 navigator.OverrideZoomBounds = new MMinMax(minResolution, maxResolution);
-
-                // Opcional: força o limiter para manter dentro do extent (evita "white borders")
-                // navigator.Limiter = new ViewportLimiterKeepWithinExtent();
             }
-            catch
-            {
-                // se algo falhar, apenas não aplicamos limites — evitar crash em runtime
-            }
-        }
-
-        // ------------------- Helpers Zoom level/resolution -------------------
-        private int GetClosestZoomLevelIndex()
-        {
-            var navigator = mapView.Map.Navigator;
-            var resolutions = navigator.Resolutions;
-            if (resolutions == null || resolutions.Count == 0)
-                return -1;
-
-            double currentRes = navigator.Viewport.Resolution;
-            int bestIndex = 0;
-            double bestDiff = double.MaxValue;
-            for (int i = 0; i < resolutions.Count; i++)
-            {
-                var diff = Math.Abs(resolutions[i] - currentRes);
-                if (diff < bestDiff)
-                {
-                    bestDiff = diff;
-                    bestIndex = i;
-                }
-            }
-            return bestIndex;
+            catch { }
         }
 
         private void EnsureZoomWithinBounds()
@@ -156,13 +120,13 @@ namespace TrackLite
             try
             {
                 var navigator = mapView.Map.Navigator;
-                int current = GetClosestZoomLevelIndex();
-                if (current < 0) return;
+                double currentRes = navigator.Viewport.Resolution;
 
-                if (current < MinZoomLevel)
-                    navigator.ZoomToLevel(MinZoomLevel);
-                else if (current > MaxZoomLevel)
-                    navigator.ZoomToLevel(MaxZoomLevel);
+                double minRes = navigator.OverrideResolutions[MaxZoomLevel];
+                double maxRes = navigator.OverrideResolutions[MinZoomLevel];
+
+                if (currentRes < minRes) navigator.ZoomTo(minRes);
+                else if (currentRes > maxRes) navigator.ZoomTo(maxRes);
             }
             catch { }
         }
@@ -202,26 +166,9 @@ namespace TrackLite
                         }
 
                         var ultimo = pontosRota.Last();
-                        usuarioLayer.Features = new List<IFeature>
-                        {
-                            new GeometryFeature
-                            {
-                                Geometry = new NetTopologySuite.Geometries.Point(ultimo.X, ultimo.Y),
-                                Styles = new List<IStyle>
-                                {
-                                    new SymbolStyle
-                                    {
-                                        Fill = new Mapsui.Styles.Brush(Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72)),
-                                        Outline = new Pen(Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4), 2),
-                                        SymbolScale = 0.6
-                                    }
-                                }
-                            }
-                        };
+                        AtualizarUsuarioLayer(ultimo);
                         mapView.RefreshGraphics();
                         mapView.Map.Navigator.CenterOn(ultimo);
-
-                        // garante que o zoom automático respeite limites
                         EnsureZoomWithinBounds();
                     }
                 }
@@ -239,9 +186,7 @@ namespace TrackLite
                 AtualizarDistanciaEPace();
 
                 if (Preferences.Get("IsTracking", false))
-                {
                     _ = StartTracking();
-                }
             }
             catch { }
         }
@@ -264,10 +209,7 @@ namespace TrackLite
                 name: "OSM",
                 persistentCache: fileCache);
 
-            var tileLayer = new TileLayer(httpTileSource)
-            {
-                Name = "OSM Online/Offline"
-            };
+            var tileLayer = new TileLayer(httpTileSource) { Name = "OSM Online/Offline" };
 
             var toRemove = mapView.Map.Layers.OfType<TileLayer>().ToList();
             foreach (var l in toRemove) mapView.Map.Layers.Remove(l);
@@ -275,7 +217,7 @@ namespace TrackLite
             mapView.Map.Layers.Insert(0, tileLayer);
         }
 
-        // ------------------- Animação Botões -------------------
+        // ------------------- Botões/Animação -------------------
         private async Task TrocarIconeComBounceAsync(Button botao, string novoArquivo)
         {
             try
@@ -308,34 +250,13 @@ namespace TrackLite
             {
                 var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10));
                 var location = await Geolocation.Default.GetLocationAsync(request);
-
                 if (location != null)
                 {
                     var merc = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
                     var userPoint = new MPoint(merc.x, merc.y);
-
-                    var corUsuario = Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72);
-                    var corContorno = Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4);
-
-                    var pontoFeature = new GeometryFeature
-                    {
-                        Geometry = new NetTopologySuite.Geometries.Point(userPoint.X, userPoint.Y),
-                        Styles = new List<IStyle>
-                        {
-                            new SymbolStyle
-                            {
-                                Fill = new Mapsui.Styles.Brush(corUsuario),
-                                Outline = new Pen(corContorno, 2),
-                                SymbolScale = 0.6
-                            }
-                        }
-                    };
-
-                    usuarioLayer.Features = new List<IFeature> { pontoFeature };
+                    AtualizarUsuarioLayer(userPoint);
                     mapView.RefreshGraphics();
                     mapView.Map.Navigator.CenterOn(userPoint);
-
-                    // aplica zoom apenas se fora do limite atual
                     EnsureZoomWithinBounds();
                 }
             }
@@ -345,16 +266,38 @@ namespace TrackLite
             }
         }
 
+        private void AtualizarUsuarioLayer(MPoint ponto)
+        {
+            var corUsuario = Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72);
+            var corContorno = Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4);
+
+            var pontoFeature = new GeometryFeature
+            {
+                Geometry = new NetTopologySuite.Geometries.Point(ponto.X, ponto.Y),
+                Styles = new List<IStyle>
+                {
+                    new SymbolStyle
+                    {
+                        Fill = new Mapsui.Styles.Brush(corUsuario),
+                        Outline = new Pen(corContorno, 2),
+                        SymbolScale = 0.6
+                    }
+                }
+            };
+
+            usuarioLayer.Features = new List<IFeature> { pontoFeature };
+        }
+
         // ------------------- Tracking -------------------
         private async Task StartTracking()
         {
             isTracking = true;
             await TrocarIconeComBounceAsync(PlayPauseButton, "pausar.png");
 
-            if (pontosRota.Count == 0) // só zera se não tiver rota
+            if (pontosRota.Count == 0)
             {
                 rotaLayer.Features = new List<IFeature>();
-                usuarioLayer.Features = new List<IFeature>();
+                tempoTimer.Stop();
                 tempoDecorrido = TimeSpan.Zero;
                 ultimaDistanciaVibrada = 0.0;
             }
@@ -364,9 +307,6 @@ namespace TrackLite
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
 
-            var corUsuario = Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72);
-            var corContorno = Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4);
-
             try
             {
                 while (!token.IsCancellationRequested)
@@ -375,12 +315,10 @@ namespace TrackLite
                     {
                         var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(2));
                         var location = await Geolocation.Default.GetLocationAsync(request);
-
                         if (location != null)
                         {
                             var merc = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
                             var ponto = new MPoint(merc.x, merc.y);
-
                             pontosRota.Add(ponto);
 
                             if (pontosRota.Count >= 2)
@@ -390,27 +328,10 @@ namespace TrackLite
                                 rotaLayer.Features = new List<IFeature> { new GeometryFeature { Geometry = line } };
                             }
 
-                            var pontoFeature = new GeometryFeature
-                            {
-                                Geometry = new NetTopologySuite.Geometries.Point(ponto.X, ponto.Y),
-                                Styles = new List<IStyle>
-                                {
-                                    new SymbolStyle
-                                    {
-                                        Fill = new Mapsui.Styles.Brush(corUsuario),
-                                        Outline = new Pen(corContorno, 2),
-                                        SymbolScale = 0.6
-                                    }
-                                }
-                            };
-                            usuarioLayer.Features = new List<IFeature> { pontoFeature };
-
+                            AtualizarUsuarioLayer(ponto);
                             mapView.RefreshGraphics();
                             mapView.Map.Navigator.CenterOn(ponto);
-
-                            // garante que o zoom esteja dentro dos limites definidos
                             EnsureZoomWithinBounds();
-
                             AtualizarDistanciaEPace();
                             SalvarEstado();
                         }
@@ -426,7 +347,6 @@ namespace TrackLite
         private async void StopTracking()
         {
             if (!isTracking) return;
-
             trackingCts?.Cancel();
             isTracking = false;
             await TrocarIconeComBounceAsync(PlayPauseButton, "playy.png");
@@ -437,19 +357,14 @@ namespace TrackLite
         // ------------------- Botões -------------------
         private async void PlayPauseButton_Clicked(object sender, EventArgs e)
         {
-            if (!isTracking)
-                await StartTracking();
-            else
-                StopTracking();
+            if (!isTracking) await StartTracking();
+            else StopTracking();
         }
 
         private async void SaveButton_Clicked(object sender, EventArgs e)
         {
-            if (isTracking)
-                StopTracking();
-
+            if (isTracking) StopTracking();
             DisplayAlert("Salvar Rota", "Rota salva! Iria para a página de histórico.", "OK");
-
             await BotaoAnimadoAsync(SaveButton);
         }
 
@@ -458,8 +373,6 @@ namespace TrackLite
             StopTracking();
             pontosRota.Clear();
             rotaLayer.Features = new List<IFeature>();
-            usuarioLayer.Features = new List<IFeature>();
-            mapView.RefreshGraphics();
             tempoDecorrido = TimeSpan.Zero;
             TempoLabel.Text = "00:00:00";
             DistanciaLabel.Text = "0 km";
@@ -467,6 +380,10 @@ namespace TrackLite
             ultimaDistanciaVibrada = 0.0;
             Preferences.Clear();
 
+            // Mantém o ícone do usuário no mapa
+            _ = CenterOnUserLocation();
+
+            mapView.RefreshGraphics();
             await BotaoAnimadoAsync(DeleteButton);
         }
 
@@ -486,28 +403,19 @@ namespace TrackLite
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
 
-            // Vibração a cada km
             if (distanciaKm - ultimaDistanciaVibrada >= 1.0)
             {
                 ultimaDistanciaVibrada = Math.Floor(distanciaKm);
                 Vibrar();
             }
 
-            // Cálculo do pace com proteção para distâncias pequenas
-            const double minDistanceKm = 0.2; // só calcula pace a partir de 200m
-
+            const double minDistanceKm = 0.2;
             if (distanciaKm >= minDistanceKm && tempoDecorrido.TotalSeconds > 0)
             {
                 double paceSegundosPorKm = tempoDecorrido.TotalSeconds / distanciaKm;
                 int paceMin = (int)Math.Floor(paceSegundosPorKm / 60);
                 int paceSec = (int)Math.Round(paceSegundosPorKm % 60);
-
-                if (paceSec == 60)
-                {
-                    paceSec = 0;
-                    paceMin++;
-                }
-
+                if (paceSec == 60) { paceSec = 0; paceMin++; }
                 PaceLabel.Text = $"{paceMin}:{paceSec:D2}";
             }
             else
@@ -539,10 +447,7 @@ namespace TrackLite
 
         private void Vibrar()
         {
-            try
-            {
-                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
-            }
+            try { Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500)); }
             catch { }
         }
     }
