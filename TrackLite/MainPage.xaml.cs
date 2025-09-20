@@ -13,10 +13,10 @@ using Mapsui.Tiling.Layers;
 using Mapsui.UI.Maui;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
 using NetTopologySuite.Geometries;
 using System.Text.Json;
 using System.Threading;
-using System.Timers;
 
 namespace TrackLite
 {
@@ -67,7 +67,11 @@ namespace TrackLite
             };
             mapView.Map.Layers.Add(usuarioLayer);
 
-            Loaded += async (_, __) => await CenterOnUserLocation();
+            Loaded += async (_, __) =>
+            {
+                RestaurarEstado();
+                await CenterOnUserLocation();
+            };
 
             // Inicializa timer
             tempoTimer = new System.Timers.Timer(1000);
@@ -78,11 +82,88 @@ namespace TrackLite
                 {
                     TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
                     AtualizarDistanciaEPace();
+                    SalvarEstado();
                 });
             };
         }
 
-        // Tile Layer híbrido
+        // ------------------- ForeGround -------------------
+        private void SalvarEstado()
+        {
+            try
+            {
+                var rotaJson = JsonSerializer.Serialize(pontosRota);
+                Preferences.Set("Rota", rotaJson);
+                Preferences.Set("Tempo", tempoDecorrido.Ticks);
+                Preferences.Set("IsTracking", isTracking);
+                Preferences.Set("UltimaDistanciaVibrada", ultimaDistanciaVibrada);
+            }
+            catch { }
+        }
+
+        private void RestaurarEstado()
+        {
+            try
+            {
+                if (Preferences.ContainsKey("Rota"))
+                {
+                    var rotaJson = Preferences.Get("Rota", "");
+                    var pontos = JsonSerializer.Deserialize<List<MPoint>>(rotaJson);
+                    if (pontos != null && pontos.Count > 0)
+                    {
+                        pontosRota.Clear();
+                        pontosRota.AddRange(pontos);
+
+                        if (pontosRota.Count >= 2)
+                        {
+                            var coords = pontosRota.Select(p => new Coordinate(p.X, p.Y)).ToArray();
+                            var line = new LineString(coords);
+                            rotaLayer.Features = new List<IFeature> { new GeometryFeature { Geometry = line } };
+                        }
+
+                        var ultimo = pontosRota.Last();
+                        usuarioLayer.Features = new List<IFeature>
+                        {
+                            new GeometryFeature
+                            {
+                                Geometry = new NetTopologySuite.Geometries.Point(ultimo.X, ultimo.Y),
+                                Styles = new List<IStyle>
+                                {
+                                    new SymbolStyle
+                                    {
+                                        Fill = new Mapsui.Styles.Brush(Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72)),
+                                        Outline = new Pen(Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4), 2),
+                                        SymbolScale = 0.6
+                                    }
+                                }
+                            }
+                        };
+                        mapView.RefreshGraphics();
+                        mapView.Map.Navigator.CenterOn(ultimo);
+                    }
+                }
+
+                if (Preferences.ContainsKey("Tempo"))
+                {
+                    long ticks = Preferences.Get("Tempo", 0L);
+                    tempoDecorrido = TimeSpan.FromTicks(ticks);
+                    TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
+                }
+
+                if (Preferences.ContainsKey("UltimaDistanciaVibrada"))
+                    ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
+
+                AtualizarDistanciaEPace();
+
+                if (Preferences.Get("IsTracking", false))
+                {
+                    _ = StartTracking();
+                }
+            }
+            catch { }
+        }
+
+        // ------------------- Tile Layer -------------------
         private void AddHybridTileLayer()
         {
             var cachePath = Path.Combine(FileSystem.AppDataDirectory, "tilecache");
@@ -91,7 +172,6 @@ namespace TrackLite
 
             var fileCache = new FileCache(cachePath, "png");
 
-            // Esquema + URL OSM
             var tileSchema = new GlobalSphericalMercator(0, 18);
             var url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
@@ -106,14 +186,13 @@ namespace TrackLite
                 Name = "OSM Online/Offline"
             };
 
-            // remove tile layers antigos
             var toRemove = mapView.Map.Layers.OfType<TileLayer>().ToList();
             foreach (var l in toRemove) mapView.Map.Layers.Remove(l);
 
             mapView.Map.Layers.Insert(0, tileLayer);
         }
 
-        // ------------------- Animação dos botões -------------------
+        // ------------------- Animação Botões -------------------
         private async Task TrocarIconeComBounceAsync(Button botao, string novoArquivo)
         {
             await botao.FadeTo(0, 150);
@@ -179,12 +258,15 @@ namespace TrackLite
             isTracking = true;
             await TrocarIconeComBounceAsync(PlayPauseButton, "pausar.png");
 
-            pontosRota.Clear();
-            rotaLayer.Features = new List<IFeature>();
-            usuarioLayer.Features = new List<IFeature>();
-            tempoDecorrido = TimeSpan.Zero;
+            if (pontosRota.Count == 0) // só zera se não tiver rota
+            {
+                rotaLayer.Features = new List<IFeature>();
+                usuarioLayer.Features = new List<IFeature>();
+                tempoDecorrido = TimeSpan.Zero;
+                ultimaDistanciaVibrada = 0.0;
+            }
+
             tempoTimer.Start();
-            ultimaDistanciaVibrada = 0.0;
 
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
@@ -233,6 +315,7 @@ namespace TrackLite
                             mapView.RefreshGraphics();
                             mapView.Map.Navigator.CenterOn(ponto);
                             AtualizarDistanciaEPace();
+                            SalvarEstado();
                         }
                     }
                     catch { }
@@ -241,10 +324,6 @@ namespace TrackLite
                 }
             }
             catch (TaskCanceledException) { }
-            finally
-            {
-                StopTracking();
-            }
         }
 
         private async void StopTracking()
@@ -255,6 +334,7 @@ namespace TrackLite
             isTracking = false;
             await TrocarIconeComBounceAsync(PlayPauseButton, "playy.png");
             tempoTimer.Stop();
+            SalvarEstado();
         }
 
         // ------------------- Botões -------------------
@@ -288,6 +368,7 @@ namespace TrackLite
             DistanciaLabel.Text = "0 km";
             PaceLabel.Text = "0:00";
             ultimaDistanciaVibrada = 0.0;
+            Preferences.Clear();
 
             await BotaoAnimadoAsync(DeleteButton);
         }
@@ -308,7 +389,6 @@ namespace TrackLite
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
 
-            // Vibração a cada 1 km
             if (distanciaKm - ultimaDistanciaVibrada >= 1.0)
             {
                 ultimaDistanciaVibrada = Math.Floor(distanciaKm);
@@ -351,12 +431,7 @@ namespace TrackLite
             {
                 Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
             }
-            catch (FeatureNotSupportedException)
-            {
-            }
-            catch (Exception)
-            {
-            }
+            catch { }
         }
     }
 }
