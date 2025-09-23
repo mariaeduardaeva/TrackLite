@@ -256,8 +256,14 @@ namespace TrackLite
                     var userPoint = new MPoint(merc.x, merc.y);
                     AtualizarUsuarioLayer(userPoint);
                     mapView.RefreshGraphics();
+
+                    // Centraliza no ponto
                     mapView.Map.Navigator.CenterOn(userPoint);
-                    EnsureZoomWithinBounds();
+
+                    // Força zoom inicial no máximo permitido
+                    var resolutions = mapView.Map.Navigator.OverrideResolutions;
+                    var minResolution = resolutions[MaxZoomLevel];
+                    mapView.Map.Navigator.ZoomTo(minResolution);
                 }
             }
             catch (Exception ex)
