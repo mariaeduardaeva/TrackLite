@@ -370,8 +370,36 @@ namespace TrackLite
         private async void SaveButton_Clicked(object sender, EventArgs e)
         {
             if (isTracking) StopTracking();
-            DisplayAlert("Salvar Rota", "Rota salva! Iria para a página de histórico.", "OK");
+
+            // Salva a rota no histórico
+            SalvarRotaNoHistorico();
+
+            // Navega usando Shell
+            await Shell.Current.GoToAsync("//HistoricoPage");
+
             await BotaoAnimadoAsync(SaveButton);
+        }
+
+        private void SalvarRotaNoHistorico()
+        {
+            double distanciaKm = pontosRota.Count >= 2 ? CalcularDistanciaTotal() / 1000.0 : 0;
+
+            var corrida = new Corrida
+            {
+                Data = DateTime.Now,
+                Distancia = $"{distanciaKm:F2} km",
+                Ritmo = PaceLabel.Text
+            };
+
+            Lixeira.CorridasHistorico.Add(corrida);
+        }
+
+        private double CalcularDistanciaTotal()
+        {
+            double distancia = 0;
+            for (int i = 1; i < pontosRota.Count; i++)
+                distancia += CalcularDistancia(pontosRota[i - 1], pontosRota[i]);
+            return distancia;
         }
 
         private async void DeletarRota_Clicked(object sender, EventArgs e)

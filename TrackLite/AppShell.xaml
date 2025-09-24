@@ -12,17 +12,17 @@
        Shell.NavBarHasShadow="False">
 
     <!-- Navegacao -->
-    <TabBar >
+    <TabBar>
         <Tab Title="Home" Icon="home.png">
-            <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />
+            <ShellContent Route="MainPage" ContentTemplate="{DataTemplate local:MainPage}" />
         </Tab>
 
         <Tab Title="Histórico" Icon="historia.png">
-            <ShellContent ContentTemplate="{DataTemplate local:HistoricoPage}" />
+            <ShellContent Route="HistoricoPage" ContentTemplate="{DataTemplate local:HistoricoPage}" />
         </Tab>
 
         <Tab Title="Mais" Icon="menu.png">
-            <ShellContent ContentTemplate="{DataTemplate local:ConfigPage}" />
+            <ShellContent Route="ConfigPage" ContentTemplate="{DataTemplate local:ConfigPage}" />
         </Tab>
     </TabBar>
 
