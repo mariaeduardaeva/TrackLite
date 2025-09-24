@@ -13,10 +13,10 @@
 
                 <!-- Data da corrida -->
                 <Label Text="{Binding DataFormatada}"
-                    FontSize="16"
-                    TextColor="#848484"
-                    HorizontalOptions="Start"
-                    Margin="0,-20,0,0"/>
+                       FontSize="16"
+                       TextColor="#848484"
+                       HorizontalOptions="Start"
+                       Margin="0,-20,0,0"/>
 
                 <!-- Estatísticas resumidas -->
                 <Grid ColumnSpacing="15" RowSpacing="15">

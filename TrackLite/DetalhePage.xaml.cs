@@ -23,12 +23,13 @@ namespace TrackLite
         }
 
         // Propriedades formatadas para bind no XAML
-        public string TempoFormatado => CorridaSelecionada?.Data.ToString("HH:mm") ?? "--:--";
+        public string TempoFormatado => CorridaSelecionada?.TempoDecorrido ?? "--:--";
         public string DistanciaFormatada => CorridaSelecionada?.Distancia ?? "-";
         public string RitmoFormatado => CorridaSelecionada?.Ritmo ?? "-";
 
         // Mostra apenas a data da corrida
-        public string DataFormatada =>CorridaSelecionada?.Data.ToString("dd MMMM 'de' yyyy", new CultureInfo("pt-BR")) ?? "-";
+        public string DataFormatada =>
+            CorridaSelecionada?.Data.ToString("dd MMMM 'de' yyyy", new CultureInfo("pt-BR")) ?? "-";
 
         // Propriedade para mostrar os passos estimados
         public string PassosEstimados
@@ -44,7 +45,7 @@ namespace TrackLite
                         out double km))
                 {
                     double passos = km * 1400;
-                    return $"{passos:F0}";
+                    return $"{passos:F0} passos";
                 }
 
                 return "-";

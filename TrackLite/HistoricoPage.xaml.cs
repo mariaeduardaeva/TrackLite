@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Linq;
@@ -8,10 +8,10 @@ namespace TrackLite;
 
 public partial class HistoricoPage : ContentPage
 {
-    // ColeÁ„o de corridas no histÛrico
+    // Cole√ß√£o de corridas no hist√≥rico
     public ObservableCollection<Corrida> Corridas { get; set; } = Lixeira.CorridasHistorico;
 
-    // ColeÁ„o de corridas agrupadas por data
+    // Cole√ß√£o de corridas agrupadas por data
     public ObservableCollection<CorridaGroup> CorridasAgrupadas { get; set; } = new();
 
     public HistoricoPage()
@@ -53,7 +53,7 @@ public partial class HistoricoPage : ContentPage
             CorridasAgrupadas.Add(grupo);
     }
 
-    // Comando para quando um item È tocado
+    // Comando para quando um item √© tocado
     public ICommand ItemTappedCommand => new Command<Corrida>(async (corrida) =>
     {
         if (corrida == null)
@@ -66,28 +66,28 @@ public partial class HistoricoPage : ContentPage
             });
     });
 
-    // Navega para a p·gina da lixeira
+    // Navega para a p√°gina da lixeira
     private async void OnLixoClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new LixoPage());
     }
 
-    // Manipula a aÁ„o de enviar uma corrida para a lixeira
+    // Manipula a a√ß√£o de enviar uma corrida para a lixeira
     private async void OnSwipeItemInvoked(object sender, EventArgs e)
     {
         if (sender is SwipeItemView swipeItemView && swipeItemView.BindingContext is Corrida corrida)
         {
             bool resposta = await DisplayAlert(
-                "ConfirmaÁ„o",
+                "Confirma√ß√£o",
                 $"Deseja realmente enviar a corrida de {corrida.Data:dd/MM/yyyy HH:mm} para a lixeira?",
                 "Sim",
-                "N„o"
+                "N√£o"
             );
 
             if (!resposta)
                 return;
 
-            // Remove a corrida do histÛrico e adiciona ‡ lixeira   
+            // Remove a corrida do hist√≥rico e adiciona √† lixeira   
             Corridas.Remove(corrida);
             Lixeira.CorridasLixo.Add(corrida);
             OrdenarCorridas();
@@ -109,6 +109,8 @@ public class Corrida
     public string Ritmo { get; set; } = string.Empty;
     public string CorFundo { get; set; } = string.Empty;
 
+    public string TempoDecorrido { get; set; } = "00:00:00"; // ‚Üê NOVA PROPRIEDADE
+
     public string DataFormatada => Data.ToString("dd/MM/yyyy HH:mm");
 }
 
@@ -123,7 +125,7 @@ public class CorridaGroup : ObservableCollection<Corrida>
     }
 }
 
-// Classe est·tica para gerenciar o histÛrico e a lixeira
+// Classe est√°tica para gerenciar o hist√≥rico e a lixeira
 public static class Lixeira
 {
     public static ObservableCollection<Corrida> CorridasLixo { get; } = new();
