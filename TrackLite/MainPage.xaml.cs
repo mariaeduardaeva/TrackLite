@@ -45,6 +45,13 @@ namespace TrackLite
         {
             InitializeComponent();
 
+            // ❗ Resetar tempo e tracking ao abrir o app
+            Preferences.Remove("Tempo");
+            Preferences.Set("IsTracking", false);
+            tempoDecorrido = TimeSpan.Zero;
+            TempoLabel.Text = "00:00:00";
+            isTracking = false;
+
             mapView.Map = new Mapsui.Map();
             SetupZoomLimits();
             AddHybridTileLayer();
@@ -62,7 +69,7 @@ namespace TrackLite
 
             usuarioLayer = new MemoryLayer
             {
-                Name = "UsuÃ¡rio",
+                Name = "Usuário",
                 Style = null,
                 Features = new List<IFeature>()
             };
@@ -162,20 +169,13 @@ namespace TrackLite
                     }
                 }
 
-                if (Preferences.ContainsKey("Tempo"))
-                {
-                    long ticks = Preferences.Get("Tempo", 0L);
-                    tempoDecorrido = TimeSpan.FromTicks(ticks);
-                    TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
-                }
-
-                if (Preferences.ContainsKey("UltimaDistanciaVibrada"))
-                    ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
-
+                // Garantir que tempo comece zerado
+                tempoDecorrido = TimeSpan.Zero;
+                TempoLabel.Text = "00:00:00";
+                isTracking = false;
+                tempoTimer.Stop();
+                ultimaDistanciaVibrada = 0.0;
                 AtualizarDistanciaEPace();
-
-                if (Preferences.Get("IsTracking", false))
-                    _ = StartTracking();
             }
             catch { }
         }
@@ -363,7 +363,7 @@ namespace TrackLite
                 Data = DateTime.Now,
                 Distancia = $"{distanciaKm:F2} km",
                 Ritmo = PaceLabel.Text,
-                TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss") // salva tempo
+                TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss")
             };
 
             Lixeira.CorridasHistorico.Add(corrida);
