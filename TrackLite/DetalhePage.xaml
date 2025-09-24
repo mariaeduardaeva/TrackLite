@@ -5,11 +5,19 @@
              BackgroundColor="#F2F2F2"
              Title="Detalhe da Atividade">
 
-    <Grid RowDefinitions="*, Auto">
+    <!-- Botão de compartilhamento no canto direito -->
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="download.png"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnExportClicked" />
+    </ContentPage.ToolbarItems>
 
+    <Grid RowDefinitions="*">
+
+        <!-- Conteúdo -->
         <ScrollView Grid.Row="0">
-            <StackLayout Padding="20" 
-                         Spacing="20">
+            <StackLayout Padding="20" Spacing="20">
 
                 <!-- Data da corrida -->
                 <Label Text="{Binding DataFormatada}"
@@ -30,116 +38,56 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Tempo -->
-                    <Frame CornerRadius="12" 
-                           HasShadow="False" 
-                           Padding="10" 
-                           BorderColor="#FCFCFC">
+                    <Frame CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
                         <HorizontalStackLayout HorizontalOptions="Center">
-                            <Image Source="clock.png" 
-                                   WidthRequest="20" 
-                                   HeightRequest="20"/>
-                            <Label Text="{Binding TempoFormatado}" 
-                                   FontAttributes="Bold"
-                                   FontSize="16"
-                                   TextColor="Black"
-                                   Margin="5,0,0,0"/>
+                            <Image Source="clock.png" WidthRequest="20" HeightRequest="20"/>
+                            <Label Text="{Binding TempoFormatado}" FontAttributes="Bold" FontSize="16" TextColor="Black" Margin="5,0,0,0"/>
                         </HorizontalStackLayout>
                     </Frame>
 
                     <!-- Distância -->
-                    <Frame Grid.Column="1" 
-                           CornerRadius="12" 
-                           HasShadow="False" 
-                           Padding="10" 
-                           BorderColor="#FCFCFC">
+                    <Frame Grid.Column="1" CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
                         <HorizontalStackLayout HorizontalOptions="Center">
-                            <Image Source="distancia.png" 
-                                   WidthRequest="20" 
-                                   HeightRequest="20"/>
-                            <Label Text="{Binding DistanciaFormatada}" 
-                                   FontAttributes="Bold"
-                                   FontSize="16"
-                                   TextColor="Black"
-                                   Margin="5,0,0,0"/>
+                            <Image Source="distancia.png" WidthRequest="20" HeightRequest="20"/>
+                            <Label Text="{Binding DistanciaFormatada}" FontAttributes="Bold" FontSize="16" TextColor="Black" Margin="5,0,0,0"/>
                         </HorizontalStackLayout>
                     </Frame>
 
                     <!-- Passos estimados -->
-                    <Frame Grid.Row="1" 
-                           CornerRadius="12" 
-                           HasShadow="False" 
-                           Padding="10" 
-                           BorderColor="#FCFCFC">
+                    <Frame Grid.Row="1" CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
                         <HorizontalStackLayout HorizontalOptions="Center">
-                            <Image Source="passos.png" 
-                                   WidthRequest="20" 
-                                   HeightRequest="20"/>
-                            <Label Text="{Binding PassosEstimados}" 
-                                   FontAttributes="Bold"
-                                   FontSize="16"
-                                   TextColor="Black"
-                                   Margin="5,0,0,0"/>
+                            <Image Source="passos.png" WidthRequest="20" HeightRequest="20"/>
+                            <Label Text="{Binding PassosEstimados}" FontAttributes="Bold" FontSize="16" TextColor="Black" Margin="5,0,0,0"/>
                         </HorizontalStackLayout>
                     </Frame>
 
                     <!-- Ritmo -->
-                    <Frame Grid.Row="1" 
-                           Grid.Column="1" 
-                           CornerRadius="12" 
-                           HasShadow="False" 
-                           Padding="10" 
-                           BorderColor="#FCFCFC">
+                    <Frame Grid.Row="1" Grid.Column="1" CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
                         <HorizontalStackLayout HorizontalOptions="Center">
-                            <Image Source="ritmo.png" 
-                                   WidthRequest="25" 
-                                   HeightRequest="25"/>
-                            <Label Text="{Binding RitmoFormatado}" 
-                                   FontAttributes="Bold"
-                                   FontSize="16"
-                                   TextColor="Black"
-                                   Margin="5,0,0,0"/>
+                            <Image Source="ritmo.png" WidthRequest="25" HeightRequest="25"/>
+                            <Label Text="{Binding RitmoFormatado}" FontAttributes="Bold" FontSize="16" TextColor="Black" Margin="5,0,0,0"/>
                         </HorizontalStackLayout>
                     </Frame>
                 </Grid>
 
                 <!-- Gráfico -->
                 <StackLayout>
-                    <Label Text="Ritmo por km"
-                           FontSize="16"
-                           FontAttributes="Bold"
-                           TextColor="Black"
-                           Margin="0,0,0,10"/>
-                    <BoxView HeightRequest="120"
-                             CornerRadius="8"
-                             BackgroundColor="GREY"/>
+                    <Label Text="Ritmo por km" FontSize="16" FontAttributes="Bold" TextColor="Black" Margin="0,0,0,10"/>
+                    <BoxView HeightRequest="120" CornerRadius="8" BackgroundColor="GREY"/>
                 </StackLayout>
 
                 <!-- Mapa -->
-                <Frame CornerRadius="12" 
-                       HasShadow="False" 
-                       Padding="0" 
-                       BackgroundColor="GREY">
+                <Frame CornerRadius="12" HasShadow="False" Padding="0" BackgroundColor="GREY">
                     <Grid HeightRequest="180">
-                        <Label Text="Mapa da corrida"
-                               TextColor="black"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"/>
+                        <Label Text="Mapa da corrida" TextColor="black" HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Grid>
                 </Frame>
 
                 <!-- Resumo -->
-                <Frame CornerRadius="12" 
-                       HasShadow="False" 
-                       Padding="18" 
-                       BorderColor="#FCFCFC">
+                <Frame CornerRadius="12" HasShadow="False" Padding="18" BorderColor="#FCFCFC">
                     <StackLayout>
-                        <Label Text="Boa corrida!"
-                               FontSize="16"
-                               FontAttributes="Bold"
-                               TextColor="Black"/>
-                        <Label Text="Cada passo te levou mais longe do que ontem."
-                               FontSize="14"
-                               TextColor="#848484"/>
+                        <Label Text="Boa corrida!" FontSize="16" FontAttributes="Bold" TextColor="Black"/>
+                        <Label Text="Cada passo te levou mais longe do que ontem." FontSize="14" TextColor="#848484"/>
                     </StackLayout>
                 </Frame>
 

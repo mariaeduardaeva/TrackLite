@@ -109,7 +109,7 @@ public class Corrida
     public string Ritmo { get; set; } = string.Empty;
     public string CorFundo { get; set; } = string.Empty;
 
-    public string TempoDecorrido { get; set; } = "00:00:00"; // ← NOVA PROPRIEDADE
+    public string TempoDecorrido { get; set; } = "00:00:00";
 
     public string DataFormatada => Data.ToString("dd/MM/yyyy HH:mm");
 }
