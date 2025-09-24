@@ -18,32 +18,6 @@ public partial class HistoricoPage : ContentPage
     {
         InitializeComponent();
 
-        // Adiciona corridas de exemplo se o histórico estiver vazio
-        if (Corridas.Count == 0)
-        {
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 26, 18, 30, 0), Distancia = "7 km", Ritmo = "4:58" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 26, 20, 15, 0), Distancia = "5.5 km", Ritmo = "5:03" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 27, 19, 0, 0), Distancia = "7 km", Ritmo = "4:58" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 28, 18, 45, 0), Distancia = "10 km", Ritmo = "5:20" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 28, 7, 30, 0), Distancia = "3 km", Ritmo = "5:10" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 29, 12, 0, 0), Distancia = "8 km", Ritmo = "4:50" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 29, 18, 15, 0), Distancia = "5 km", Ritmo = "5:05" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 30, 6, 45, 0), Distancia = "12 km", Ritmo = "5:30" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 30, 20, 0, 0), Distancia = "4 km", Ritmo = "4:45" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 8, 31, 19, 20, 0), Distancia = "6.5 km", Ritmo = "5:00" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 1, 7, 15, 0), Distancia = "5 km", Ritmo = "4:55" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 1, 18, 50, 0), Distancia = "9 km", Ritmo = "5:12" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 2, 6, 30, 0), Distancia = "10 km", Ritmo = "5:25" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 2, 19, 10, 0), Distancia = "7 km", Ritmo = "4:57" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 3, 12, 45, 0), Distancia = "3.5 km", Ritmo = "5:15" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 3, 20, 5, 0), Distancia = "8 km", Ritmo = "5:00" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 4, 7, 0, 0), Distancia = "6 km", Ritmo = "5:05" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 4, 18, 30, 0), Distancia = "11 km", Ritmo = "5:22" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 5, 6, 50, 0), Distancia = "4 km", Ritmo = "4:50" });
-            Corridas.Add(new Corrida { Data = new DateTime(2025, 9, 5, 19, 15, 0), Distancia = "7.5 km", Ritmo = "5:08" });
-
-        }
-
         BindingContext = this;
         OrdenarCorridas();
     }
