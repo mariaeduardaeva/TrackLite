@@ -90,21 +90,59 @@ namespace TrackLite
             using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             using (var document = SKDocument.CreatePdf(stream))
             {
-                const float pageWidth = 595; // A4 width
-                const float pageHeight = 842; // A4 height
+                const float pageWidth = 595;
+                const float pageHeight = 842;
 
-                // BeginPage retorna um SKCanvas para desenhar
                 using (var canvas = document.BeginPage(pageWidth, pageHeight))
                 {
-                    // Fundo branco
                     canvas.Clear(SKColors.White);
+
+                    float margin = 50;
+                    float y = 50;
+
+                    var headerPaint = new SKPaint { Color = new SKColor(0x21, 0x4F, 0x4B) };
+                    canvas.DrawRect(0, 0, pageWidth, 40, headerPaint);
+
+                    var headerTextPaint = new SKPaint
+                    {
+                        Color = new SKColor(0xFC, 0xFC, 0xFC),
+                        TextSize = 18,
+                        IsAntialias = true,
+                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
+                    };
+                    string headerText = "TrackLite";
+                    var headerTextWidth = headerTextPaint.MeasureText(headerText);
+                    canvas.DrawText(headerText, (pageWidth - headerTextWidth) / 2, 27, headerTextPaint);
+
+                    var shadowPaint = new SKPaint
+                    {
+                        Color = SKColors.LightGray.WithAlpha(120),
+                        TextSize = 28,
+                        IsAntialias = true,
+                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
+                    };
 
                     var paintTitle = new SKPaint
                     {
-                        Color = SKColors.Black,
-                        TextSize = 24,
+                        Color = new SKColor(0x21, 0x4F, 0x4B),
+                        TextSize = 28,
                         IsAntialias = true,
-                        Typeface = SKTypeface.Default
+                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
+                    };
+
+                    string title = "Relatório da Corrida";
+                    var titleWidth = paintTitle.MeasureText(title);
+                    canvas.DrawText(title, (pageWidth - titleWidth) / 2 + 1, 85, shadowPaint);
+                    canvas.DrawText(title, (pageWidth - titleWidth) / 2, 83, paintTitle);
+
+                    y = 130;
+
+                    var paintSubtitle = new SKPaint
+                    {
+                        Color = new SKColor(0x21, 0x4F, 0x4B),
+                        TextSize = 18,
+                        IsAntialias = true,
+                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
                     };
 
                     var paintBody = new SKPaint
@@ -112,22 +150,39 @@ namespace TrackLite
                         Color = SKColors.Black,
                         TextSize = 16,
                         IsAntialias = true,
-                        Typeface = SKTypeface.Default
+                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Normal)
                     };
 
-                    // Título
-                    canvas.DrawText("Detalhe da Corrida", 40, 60, paintTitle);
+                    void DesenharLinha(string label, string valor)
+                    {
+                        canvas.DrawText(label, margin, y, paintSubtitle);
+                        canvas.DrawText(valor, margin + 220, y, paintBody);
 
-                    // Conteúdo
-                    canvas.DrawText($"Data: {corrida.Data:dd/MM/yyyy HH:mm}", 40, 100, paintBody);
-                    canvas.DrawText($"Tempo: {corrida.TempoDecorrido}", 40, 130, paintBody);
-                    canvas.DrawText($"Distância: {corrida.Distancia}", 40, 160, paintBody);
-                    canvas.DrawText($"Ritmo: {corrida.Ritmo}", 40, 190, paintBody);
-                    canvas.DrawText($"Passos estimados: {PassosEstimados}", 40, 220, paintBody);
+                        y += 35;
+                    }
+
+                    DesenharLinha("Data:", corrida.Data.ToString("dd/MM/yyyy HH:mm"));
+                    DesenharLinha("Tempo:", corrida.TempoDecorrido);
+                    DesenharLinha("Distância:", corrida.Distancia);
+                    DesenharLinha("Ritmo:", corrida.Ritmo);
+                    DesenharLinha("Passos estimados:", PassosEstimados);
+
+                    var rodapePaint = new SKPaint
+                    {
+                        Color = SKColors.Gray,
+                        TextSize = 12,
+                        IsAntialias = true,
+                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Italic)
+                    };
+                    string rodape = "Gerado por TrackLite";
+                    var rodapeWidth = rodapePaint.MeasureText(rodape);
+                    canvas.DrawText(rodape, (pageWidth - rodapeWidth) / 2, pageHeight - 40, rodapePaint);
                 }
 
                 document.EndPage();
             }
         }
+
     }
+
 }
