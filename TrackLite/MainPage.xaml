@@ -1,16 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
              x:Class="TrackLite.MainPage"
              BackgroundColor="#F2F2F2">
 
     <Grid>
 
-        <!-- Mapa -->
-        <mapsui:MapControl x:Name="mapView"
-                           HorizontalOptions="Fill"
-                           VerticalOptions="Fill"/>
+        <!-- WebView do mapa -->
+        <WebView x:Name="MapWebView"
+                 HorizontalOptions="FillAndExpand"
+                 VerticalOptions="FillAndExpand"/>
 
         <!-- Frame branco com informações e botões -->
         <Border StrokeThickness="0"
@@ -83,10 +82,7 @@
 
                 <!-- Botões -->
                 <Grid Grid.Row="2" HorizontalOptions="Fill">
-
-                    <!-- Stack dos 3 primeiros botões centralizados -->
                     <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="7">
-                        <!-- Deletar Rota -->
                         <Button x:Name="DeleteButton"
                                 BackgroundColor="#214F4B"
                                 CornerRadius="20"
@@ -98,7 +94,6 @@
                             </Button.ImageSource>
                         </Button>
 
-                        <!-- Iniciar / Pausar -->
                         <Button x:Name="PlayPauseButton"
                                 BackgroundColor="#214F4B"
                                 CornerRadius="20"
@@ -110,7 +105,6 @@
                             </Button.ImageSource>
                         </Button>
 
-                        <!-- Salvar -->
                         <Button x:Name="SaveButton"
                                 BackgroundColor="#214F4B"
                                 CornerRadius="20"
@@ -123,7 +117,6 @@
                         </Button>
                     </StackLayout>
 
-                    <!-- Localização -->
                     <Button x:Name="LocalButton"
                             HorizontalOptions="End"
                             Margin="0,0,10,0"
@@ -136,7 +129,6 @@
                             <FileImageSource File="local.png"/>
                         </Button.ImageSource>
                     </Button>
-
                 </Grid>
 
             </Grid>

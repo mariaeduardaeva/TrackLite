@@ -1,85 +1,35 @@
-﻿// BruTile
-using BruTile.Cache;
-using BruTile.Predefined;
-using BruTile.Web;
-using Mapsui;
-using Mapsui.Layers;
-using Mapsui.Nts;
-using Mapsui.Projections;
-using Mapsui.Providers;
-using Mapsui.Styles;
-using Mapsui.Tiling;
-using Mapsui.Tiling.Layers;
-using Mapsui.UI.Maui;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Devices;
+﻿using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Storage;
-using NetTopologySuite.Geometries;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-using System.IO;
-using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace TrackLite
 {
     public partial class MainPage : ContentPage
     {
-        private const int MinZoomLevel = 10;
-        private const int MaxZoomLevel = 18;
-
+        private List<(double lat, double lng)> rota = new();
+        private List<(double lat, double lng)> rotaBuffer = new();
         private bool isTracking = false;
-        private readonly List<MPoint> pontosRota = new();
-        private MemoryLayer rotaLayer;
-        private MemoryLayer usuarioLayer;
-
-        private readonly System.Timers.Timer tempoTimer;
+        private System.Timers.Timer tempoTimer;
         private TimeSpan tempoDecorrido = TimeSpan.Zero;
-
-        private CancellationTokenSource trackingCts;
         private double ultimaDistanciaVibrada = 0.0;
+        private CancellationTokenSource trackingCts;
+        private bool mapaPronto = false;
+        private TaskCompletionSource<bool> mapaInicializadoTcs = new();
+
+        private const int ZoomInicial = 18; // zoom inicial ao abrir o mapa
+        private const int MinZoom = 10;     // limite mínimo de zoom
+        private const int MaxZoom = 18;     // limite máximo de zoom
 
         public MainPage()
         {
             InitializeComponent();
-
-            // ❗ Resetar tempo e tracking ao abrir o app
-            Preferences.Remove("Tempo");
-            Preferences.Set("IsTracking", false);
-            tempoDecorrido = TimeSpan.Zero;
-            TempoLabel.Text = "00:00:00";
-            isTracking = false;
-
-            mapView.Map = new Mapsui.Map();
-            SetupZoomLimits();
-            AddHybridTileLayer();
-
-            rotaLayer = new MemoryLayer
-            {
-                Name = "Rota",
-                Style = new VectorStyle
-                {
-                    Line = new Pen(Mapsui.Styles.Color.FromArgb(255, 33, 79, 75), 4)
-                },
-                Features = new List<IFeature>()
-            };
-            mapView.Map.Layers.Add(rotaLayer);
-
-            usuarioLayer = new MemoryLayer
-            {
-                Name = "Usuário",
-                Style = null,
-                Features = new List<IFeature>()
-            };
-            mapView.Map.Layers.Add(usuarioLayer);
-
-            Loaded += async (_, __) =>
-            {
-                RestaurarEstado();
-                await CenterOnUserLocation();
-            };
+            CarregarMapa();
 
             tempoTimer = new System.Timers.Timer(1000);
             tempoTimer.Elapsed += (s, e) =>
@@ -92,53 +42,175 @@ namespace TrackLite
                     SalvarEstado();
                 });
             };
+
+            Loaded += async (_, __) =>
+            {
+                RestaurarEstado();
+                await mapaInicializadoTcs.Task;
+                await CentralizarUsuario();
+            };
         }
 
-        private void SetupZoomLimits()
+        #region WebView Map
+        private void CarregarMapa()
         {
+            var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
+<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+<style>
+html, body, #map {{ height:100%; margin:0; padding:0; }}
+.user-icon {{
+    border: 2px solid #FCFCFC;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    background-color: #16C072;
+    animation: pulse 2s ease-in-out infinite;
+}}
+@keyframes pulse {{
+    0% {{ transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 192, 114, 0.7); }}
+    50% {{ transform: scale(1.2); box-shadow: 0 0 10px 5px rgba(22, 192, 114, 0.7); }}
+    100% {{ transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 192, 114, 0); }}
+}}
+</style>
+</head>
+<body>
+<div id='map'></div>
+<script>
+var minZoom = {MinZoom};
+var maxZoom = {MaxZoom};
+var initialZoom = {ZoomInicial};
+
+window.map = L.map('map', {{
+    center: [0,0],
+    zoom: initialZoom,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    scrollWheelZoom: true
+}});
+
+L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{ 
+    maxZoom: maxZoom,
+    minZoom: minZoom,
+    noWrap: true
+}}).addTo(window.map);
+
+window.rotaLine = L.polyline([], {{color: '#214F4B', weight: 4}}).addTo(window.map);
+
+var usuarioIcon = L.divIcon({{
+    html: '<div class=""user-icon""></div>',
+    className: '',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+}});
+
+window.usuarioMarker = L.marker([0,0], {{icon: usuarioIcon}}).addTo(window.map);
+
+function atualizarUsuario(lat, lng) {{
+    window.usuarioMarker.setLatLng([lat,lng]);
+    window.map.panTo([lat,lng], {{animate: true, duration: 1}});
+    window.rotaLine.addLatLng([lat,lng]);
+}}
+
+function centralizar(lat, lng) {{
+    window.map.setView([lat,lng], initialZoom, {{animate: true, duration: 1}});
+}}
+
+function limparRota() {{
+    if (window.rotaLine) {{
+        window.map.removeLayer(window.rotaLine);
+    }}
+    window.rotaLine = L.polyline([], {{color: '#214F4B', weight: 4}}).addTo(window.map);
+}}
+
+window.map.on('zoomend', function() {{
+    if (window.map.getZoom() > maxZoom) {{
+        window.map.setZoom(maxZoom);
+    }}
+    if (window.map.getZoom() < minZoom) {{
+        window.map.setZoom(minZoom);
+    }}
+}});
+
+setTimeout(function() {{
+    window.location.href = 'app://map-ready';
+}}, 100);
+</script>
+</body>
+</html>";
+
+            MapWebView.Source = new HtmlWebViewSource { Html = html };
+
+            MapWebView.Navigating += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Url) && e.Url.StartsWith("app://map-ready"))
+                {
+                    e.Cancel = true;
+                    mapaPronto = true;
+                    mapaInicializadoTcs.TrySetResult(true);
+                    Debug.WriteLine("Mapa sinalizou pronto!");
+                }
+            };
+        }
+
+        private async Task AtualizarMapa(double lat, double lng)
+        {
+            if (!mapaPronto) return;
+
+            rota.Add((lat, lng));
+
+            string js = $"atualizarUsuario({lat}, {lng});";
+            await MapWebView.EvaluateJavaScriptAsync(js);
+        }
+
+        private async Task CentralizarUsuario()
+        {
+            if (!mapaPronto)
+                await mapaInicializadoTcs.Task;
+
             try
             {
-                var navigator = mapView.Map.Navigator;
-                var mercator = new GlobalSphericalMercator();
-                var mercResolutions = mercator.Resolutions.Select(r => r.Value.UnitsPerPixel).ToList();
-                navigator.OverrideResolutions = mercResolutions;
+                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+                if (status != PermissionStatus.Granted)
+                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
 
-                int minIdx = Math.Max(0, MinZoomLevel);
-                int maxIdx = Math.Min(mercResolutions.Count - 1, MaxZoomLevel);
-                if (minIdx > maxIdx) (minIdx, maxIdx) = (maxIdx, minIdx);
+                if (status != PermissionStatus.Granted)
+                {
+                    await DisplayAlert("Permissão", "Localização não permitida.", "OK");
+                    return;
+                }
 
-                double minResolution = mercResolutions[maxIdx];
-                double maxResolution = mercResolutions[minIdx];
-                navigator.OverrideZoomBounds = new MMinMax(minResolution, maxResolution);
+                var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10));
+                var location = await Geolocation.Default.GetLocationAsync(request);
+                if (location != null)
+                {
+                    string js = $"centralizar({location.Latitude}, {location.Longitude});";
+                    await MapWebView.EvaluateJavaScriptAsync(js);
+                    await AtualizarMapa(location.Latitude, location.Longitude);
+                }
             }
-            catch { }
-        }
-
-        private void EnsureZoomWithinBounds()
-        {
-            try
+            catch (Exception ex)
             {
-                var navigator = mapView.Map.Navigator;
-                double currentRes = navigator.Viewport.Resolution;
-                double minRes = navigator.OverrideResolutions[MaxZoomLevel];
-                double maxRes = navigator.OverrideResolutions[MinZoomLevel];
-
-                if (currentRes < minRes) navigator.ZoomTo(minRes);
-                else if (currentRes > maxRes) navigator.ZoomTo(maxRes);
+                Debug.WriteLine("Erro ao centralizar usuário: " + ex);
             }
-            catch { }
         }
+        #endregion
 
+        #region Estado
         private void SalvarEstado()
         {
             try
             {
-                Preferences.Set("Rota", JsonSerializer.Serialize(pontosRota));
+                Preferences.Set("Rota", JsonSerializer.Serialize(rota));
                 Preferences.Set("Tempo", tempoDecorrido.Ticks);
                 Preferences.Set("IsTracking", isTracking);
                 Preferences.Set("UltimaDistanciaVibrada", ultimaDistanciaVibrada);
             }
-            catch { }
+            catch (Exception ex) { Debug.WriteLine("Erro ao salvar estado: " + ex); }
         }
 
         private void RestaurarEstado()
@@ -147,148 +219,44 @@ namespace TrackLite
             {
                 if (Preferences.ContainsKey("Rota"))
                 {
-                    var rotaJson = Preferences.Get("Rota", "");
-                    var pontos = JsonSerializer.Deserialize<List<MPoint>>(rotaJson);
-                    if (pontos != null && pontos.Count > 0)
-                    {
-                        pontosRota.Clear();
-                        pontosRota.AddRange(pontos);
+                    var json = Preferences.Get("Rota", "");
+                    var pontos = JsonSerializer.Deserialize<List<(double lat, double lng)>>(json);
+                    if (pontos != null)
+                        rota.AddRange(pontos);
 
-                        if (pontosRota.Count >= 2)
-                        {
-                            var coords = pontosRota.Select(p => new Coordinate(p.X, p.Y)).ToArray();
-                            var line = new LineString(coords);
-                            rotaLayer.Features = new List<IFeature> { new GeometryFeature { Geometry = line } };
-                        }
-
-                        var ultimo = pontosRota.Last();
-                        AtualizarUsuarioLayer(ultimo);
-                        mapView.RefreshGraphics();
-                        mapView.Map.Navigator.CenterOn(ultimo);
-                        EnsureZoomWithinBounds();
-                    }
+                    foreach (var p in rota)
+                        _ = AtualizarMapa(p.lat, p.lng);
                 }
 
-                // Garantir que tempo comece zerado
                 tempoDecorrido = TimeSpan.Zero;
                 TempoLabel.Text = "00:00:00";
                 isTracking = false;
-                tempoTimer.Stop();
-                ultimaDistanciaVibrada = 0.0;
+                ultimaDistanciaVibrada = 0;
                 AtualizarDistanciaEPace();
             }
-            catch { }
+            catch (Exception ex) { Debug.WriteLine("Erro ao restaurar estado: " + ex); }
         }
+        #endregion
 
-        private void AddHybridTileLayer()
-        {
-            var cachePath = Path.Combine(FileSystem.AppDataDirectory, "tilecache");
-            if (!Directory.Exists(cachePath))
-                Directory.CreateDirectory(cachePath);
-
-            var fileCache = new FileCache(cachePath, "png");
-            var tileSchema = new GlobalSphericalMercator(0, 18);
-            var url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-
-            var httpTileSource = new HttpTileSource(
-                tileSchema,
-                url,
-                name: "OSM",
-                persistentCache: fileCache);
-
-            var tileLayer = new TileLayer(httpTileSource) { Name = "OSM Online/Offline" };
-
-            var toRemove = mapView.Map.Layers.OfType<TileLayer>().ToList();
-            foreach (var l in toRemove) mapView.Map.Layers.Remove(l);
-
-            mapView.Map.Layers.Insert(0, tileLayer);
-        }
-
-        private async Task TrocarIconeComBounceAsync(Button botao, string novoArquivo)
-        {
-            try
-            {
-                await botao.FadeTo(0, 150);
-                botao.ImageSource = ImageSource.FromFile(novoArquivo);
-                await botao.FadeTo(1, 150);
-                await botao.ScaleTo(1.08, 180, Easing.CubicOut);
-                await botao.ScaleTo(1.0, 180, Easing.CubicOut);
-            }
-            catch { }
-        }
-
-        private async Task BotaoAnimadoAsync(Button botao)
-        {
-            try
-            {
-                await botao.FadeTo(0.6, 100);
-                await botao.FadeTo(1, 100);
-                await botao.ScaleTo(1.08, 180, Easing.CubicOut);
-                await botao.ScaleTo(1.0, 180, Easing.CubicOut);
-            }
-            catch { }
-        }
-
-        private async Task CenterOnUserLocation()
-        {
-            try
-            {
-                var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10));
-                var location = await Geolocation.Default.GetLocationAsync(request);
-                if (location != null)
-                {
-                    var merc = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
-                    var userPoint = new MPoint(merc.x, merc.y);
-                    AtualizarUsuarioLayer(userPoint);
-                    mapView.RefreshGraphics();
-
-                    mapView.Map.Navigator.CenterOn(userPoint);
-
-                    var resolutions = mapView.Map.Navigator.OverrideResolutions;
-                    var minResolution = resolutions[MaxZoomLevel];
-                    mapView.Map.Navigator.ZoomTo(minResolution);
-                }
-            }
-            catch { }
-        }
-
-        private void AtualizarUsuarioLayer(MPoint ponto)
-        {
-            var corUsuario = Mapsui.Styles.Color.FromArgb(255, 0x16, 0xC0, 0x72);
-            var corContorno = Mapsui.Styles.Color.FromArgb(255, 0xF8, 0xF4, 0xF4);
-
-            var pontoFeature = new GeometryFeature
-            {
-                Geometry = new NetTopologySuite.Geometries.Point(ponto.X, ponto.Y),
-                Styles = new List<IStyle>
-                {
-                    new SymbolStyle
-                    {
-                        Fill = new Mapsui.Styles.Brush(corUsuario),
-                        Outline = new Pen(corContorno, 2),
-                        SymbolScale = 0.6
-                    }
-                }
-            };
-
-            usuarioLayer.Features = new List<IFeature> { pontoFeature };
-        }
-
+        #region Tracking
         private async Task StartTracking()
         {
-            isTracking = true;
-            await TrocarIconeComBounceAsync(PlayPauseButton, "pausar.png");
+            rota.Clear();
+            rotaBuffer.Clear();
+            tempoDecorrido = TimeSpan.Zero;
+            DistanciaLabel.Text = "0 km";
+            PaceLabel.Text = "0:00";
+            ultimaDistanciaVibrada = 0;
 
-            if (pontosRota.Count == 0)
+            if (mapaPronto)
             {
-                rotaLayer.Features = new List<IFeature>();
-                tempoTimer.Stop();
-                tempoDecorrido = TimeSpan.Zero;
-                ultimaDistanciaVibrada = 0.0;
+                try { await MapWebView.EvaluateJavaScriptAsync("limparRota();"); }
+                catch (Exception ex) { Debug.WriteLine("Erro ao limpar rota antes do tracking: " + ex); }
             }
 
+            isTracking = true;
+            PlayPauseButton.ImageSource = "pausar.png";
             tempoTimer.Start();
-
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
 
@@ -296,32 +264,10 @@ namespace TrackLite
             {
                 while (!token.IsCancellationRequested)
                 {
-                    try
-                    {
-                        var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(2));
-                        var location = await Geolocation.Default.GetLocationAsync(request);
-                        if (location != null)
-                        {
-                            var merc = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
-                            var ponto = new MPoint(merc.x, merc.y);
-                            pontosRota.Add(ponto);
-
-                            if (pontosRota.Count >= 2)
-                            {
-                                var coords = pontosRota.Select(p => new Coordinate(p.X, p.Y)).ToArray();
-                                var line = new LineString(coords);
-                                rotaLayer.Features = new List<IFeature> { new GeometryFeature { Geometry = line } };
-                            }
-
-                            AtualizarUsuarioLayer(ponto);
-                            mapView.RefreshGraphics();
-                            mapView.Map.Navigator.CenterOn(ponto);
-                            EnsureZoomWithinBounds();
-                            AtualizarDistanciaEPace();
-                            SalvarEstado();
-                        }
-                    }
-                    catch { }
+                    var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(2));
+                    var location = await Geolocation.Default.GetLocationAsync(request);
+                    if (location != null)
+                        await AtualizarMapa(location.Latitude, location.Longitude);
 
                     await Task.Delay(2000, token);
                 }
@@ -329,12 +275,12 @@ namespace TrackLite
             catch (TaskCanceledException) { }
         }
 
-        private async void StopTracking()
+        private void StopTracking()
         {
             if (!isTracking) return;
             trackingCts?.Cancel();
             isTracking = false;
-            await TrocarIconeComBounceAsync(PlayPauseButton, "playy.png");
+            PlayPauseButton.ImageSource = "playy.png";
             tempoTimer.Stop();
             SalvarEstado();
         }
@@ -344,20 +290,47 @@ namespace TrackLite
             if (!isTracking) await StartTracking();
             else StopTracking();
         }
+        #endregion
+
+        #region Botões
+        private async void DeletarRota_Clicked(object sender, EventArgs e)
+        {
+            StopTracking();
+            rota.Clear();
+            rotaBuffer.Clear();
+            tempoDecorrido = TimeSpan.Zero;
+            TempoLabel.Text = "00:00:00";
+            DistanciaLabel.Text = "0 km";
+            PaceLabel.Text = "0:00";
+            ultimaDistanciaVibrada = 0;
+            Preferences.Clear();
+
+            if (mapaPronto)
+            {
+                try
+                {
+                    await MapWebView.EvaluateJavaScriptAsync("limparRota();");
+                    await MapWebView.EvaluateJavaScriptAsync("usuarioMarker.setLatLng([0,0]);");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Erro ao limpar rota no mapa: " + ex);
+                }
+            }
+
+            await CentralizarUsuario();
+        }
 
         private async void SaveButton_Clicked(object sender, EventArgs e)
         {
-            if (isTracking) StopTracking();
-
+            StopTracking();
             SalvarRotaNoHistorico();
             await Shell.Current.GoToAsync("//HistoricoPage");
-            await BotaoAnimadoAsync(SaveButton);
         }
 
         private void SalvarRotaNoHistorico()
         {
-            double distanciaKm = pontosRota.Count >= 2 ? CalcularDistanciaTotal() / 1000.0 : 0;
-
+            double distanciaKm = rota.Count >= 2 ? CalcularDistanciaTotal() / 1000.0 : 0;
             var corrida = new Corrida
             {
                 Data = DateTime.Now,
@@ -365,46 +338,43 @@ namespace TrackLite
                 Ritmo = PaceLabel.Text,
                 TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss")
             };
-
             Lixeira.CorridasHistorico.Add(corrida);
         }
 
         private double CalcularDistanciaTotal()
         {
             double distancia = 0;
-            for (int i = 1; i < pontosRota.Count; i++)
-                distancia += CalcularDistancia(pontosRota[i - 1], pontosRota[i]);
+            for (int i = 1; i < rota.Count; i++)
+                distancia += Haversine(rota[i - 1], rota[i]);
             return distancia;
-        }
-
-        private async void DeletarRota_Clicked(object sender, EventArgs e)
-        {
-            StopTracking();
-            pontosRota.Clear();
-            rotaLayer.Features = new List<IFeature>();
-            tempoDecorrido = TimeSpan.Zero;
-            TempoLabel.Text = "00:00:00";
-            DistanciaLabel.Text = "0 km";
-            PaceLabel.Text = "0:00";
-            ultimaDistanciaVibrada = 0.0;
-            Preferences.Clear();
-
-            _ = CenterOnUserLocation();
-            mapView.RefreshGraphics();
-            await BotaoAnimadoAsync(DeleteButton);
         }
 
         private async void LocalButton_Clicked(object sender, EventArgs e)
         {
-            await CenterOnUserLocation();
-            await BotaoAnimadoAsync(LocalButton);
+            if (!mapaPronto) return;
+            try
+            {
+                var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10));
+                var location = await Geolocation.Default.GetLocationAsync(request);
+                if (location != null)
+                {
+                    string js = $"window.map.setView([{location.Latitude}, {location.Longitude}], {ZoomInicial}, {{animate: true, duration: 1}});";
+                    await MapWebView.EvaluateJavaScriptAsync(js);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Erro no LocalButton: " + ex);
+            }
         }
+        #endregion
 
+        #region Pace e Distância
         private void AtualizarDistanciaEPace()
         {
             double distancia = 0;
-            for (int i = 1; i < pontosRota.Count; i++)
-                distancia += CalcularDistancia(pontosRota[i - 1], pontosRota[i]);
+            for (int i = 1; i < rota.Count; i++)
+                distancia += Haversine(rota[i - 1], rota[i]);
 
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
@@ -424,36 +394,28 @@ namespace TrackLite
                 PaceLabel.Text = $"{paceMin}:{paceSec:D2}";
             }
             else
-            {
                 PaceLabel.Text = "0:00";
-            }
         }
 
-        private double CalcularDistancia(MPoint p1, MPoint p2)
+        private void Vibrar()
         {
-            var lonLat1 = SphericalMercator.ToLonLat(p1.X, p1.Y);
-            var lonLat2 = SphericalMercator.ToLonLat(p2.X, p2.Y);
-            return Haversine(lonLat1.lat, lonLat1.lon, lonLat2.lat, lonLat2.lon);
+            try { Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500)); }
+            catch (Exception ex) { Debug.WriteLine("Erro ao vibrar: " + ex); }
         }
 
-        private double Haversine(double lat1, double lon1, double lat2, double lon2)
+        private double Haversine((double lat, double lng) p1, (double lat, double lng) p2)
         {
             double R = 6371000;
-            double dLat = ToRad(lat2 - lat1);
-            double dLon = ToRad(lon2 - lon1);
+            double dLat = ToRad(p2.lat - p1.lat);
+            double dLon = ToRad(p2.lng - p1.lng);
             double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                       Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2)) *
+                       Math.Cos(ToRad(p1.lat)) * Math.Cos(ToRad(p2.lat)) *
                        Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
             double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             return R * c;
         }
 
         private double ToRad(double deg) => deg * Math.PI / 180.0;
-
-        private void Vibrar()
-        {
-            try { Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500)); }
-            catch { }
-        }
+        #endregion
     }
 }
