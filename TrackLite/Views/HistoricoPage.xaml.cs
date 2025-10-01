@@ -12,10 +12,8 @@ public partial class HistoricoPage : ContentPage
 {
     private readonly DatabaseService _databaseService;
 
-    // Coleção de corridas no histórico
     public ObservableCollection<Corrida> Corridas { get; set; } = new ObservableCollection<Corrida>();
 
-    // Coleção de corridas agrupadas por data
     public ObservableCollection<CorridaGroup> CorridasAgrupadas { get; set; } = new();
 
     public HistoricoPage()
@@ -43,7 +41,6 @@ public partial class HistoricoPage : ContentPage
         OrdenarCorridas();
     }
 
-    // Ordena as corridas por data e agrupa-as
     public void OrdenarCorridas()
     {
         var ordenadas = Corridas.OrderByDescending(c => c.Data).ToList();
@@ -68,7 +65,6 @@ public partial class HistoricoPage : ContentPage
             CorridasAgrupadas.Add(grupo);
     }
 
-    // Comando para quando um item é tocado
     public ICommand ItemTappedCommand => new Command<Corrida>(async (corrida) =>
     {
         if (corrida == null)
@@ -81,7 +77,6 @@ public partial class HistoricoPage : ContentPage
             });
     });
 
-    // Navega para a página da lixeira
     private async void OnLixoClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new LixoPage());

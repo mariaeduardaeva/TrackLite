@@ -1,131 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.LixoPage"
              Title="Lixeira"
              BackgroundColor="#F2F2F2">
 
-    <!-- CollectionView das corridas na lixeira -->
-    <CollectionView x:Name="LixoCollectionView"
-                    Margin="15,10"
-                    ItemsSource="{Binding CorridasLixoAgrupadas}"
-                    IsGrouped="True"
-                    SelectionMode="None">
+    <Grid RowDefinitions="Auto,*">
 
-        <!-- Cabecalho do grupo (Data) -->
-        <CollectionView.GroupHeaderTemplate>
-            <DataTemplate>
-                <Label Text="{Binding DataChave}" 
-                       FontSize="14"
-                       TextColor="#848484"
-                       Margin="0,15,0,5"/>
-            </DataTemplate>
-        </CollectionView.GroupHeaderTemplate>
+        <Grid Grid.Row="0" Margin="15,15,15,0">
+            <Label Text="Corridas na lixeira com mais de 30 dias serão automaticamente excluídas."
+                   FontSize="16"
+                   TextColor="#848484"
+                   HorizontalOptions="Start"
+                   Margin="0,-20,0,0"/>
+        </Grid>
 
-        <!-- Template das corridas na lixeira -->
-        <CollectionView.ItemTemplate>
-            <DataTemplate>
-                <SwipeView>
-                    <!-- Swipe para restaurar corrida -->
-                    <SwipeView.RightItems>
-                        <SwipeItems Mode="Execute">
-                            <SwipeItemView Invoked="OnRestaurarInvoked">
-                                <Frame CornerRadius="17"
-                                       BackgroundColor="#214F4B"
-                                       Padding="10"
-                                       Margin="5"
-                                       HasShadow="False">
-                                    <StackLayout Orientation="Horizontal"
-                                                 VerticalOptions="Center"
-                                                 HorizontalOptions="Center">
-                                        <Image Source="restaurar.png"
-                                               WidthRequest="20"
-                                               HeightRequest="20"/>
-                                        <Label Text="Restaurar"
-                                               TextColor="White"
-                                               FontAttributes="Bold"
-                                               VerticalOptions="Center"
-                                               Margin="5,0,0,0"/>
-                                    </StackLayout>
-                                </Frame>
-                            </SwipeItemView>
-                            
-                        </SwipeItems>
-                    </SwipeView.RightItems>
+        <CollectionView Grid.Row="1"
+                        x:Name="LixoCollectionView"
+                        Margin="15,10"
+                        ItemsSource="{Binding CorridasLixoAgrupadas}"
+                        IsGrouped="True"
+                        SelectionMode="None">
 
-                    <Frame BackgroundColor="#FCFCFC"
-                           CornerRadius="15"
-                           HasShadow="False"
-                           Padding="10"
-                           Margin="0,5">
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate>
+                    <Label Text="{Binding DataChave}" 
+                           FontSize="14"
+                           TextColor="#848484"
+                           Margin="0,15,0,5"/>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
 
-                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" 
-                              RowDefinitions="Auto,Auto" 
-                              VerticalOptions="Center" 
-                              ColumnSpacing="10"
-                              Padding="5">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItemView Invoked="OnRestaurarInvoked">
+                                    <Frame CornerRadius="17"
+                                           BackgroundColor="#214F4B"
+                                           Padding="10"
+                                           Margin="5"
+                                           HasShadow="False">
+                                        <StackLayout Orientation="Horizontal"
+                                                     VerticalOptions="Center"
+                                                     HorizontalOptions="Center">
+                                            <Image Source="restaurar.png"
+                                                   WidthRequest="20"
+                                                   HeightRequest="20"/>
+                                            <Label Text="Restaurar"
+                                                   TextColor="White"
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center"
+                                                   Margin="5,0,0,0"/>
+                                        </StackLayout>
+                                    </Frame>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
 
-                            <Image Source="objective.png" 
-                                   Grid.RowSpan="2" 
-                                   Grid.Column="0"
-                                   WidthRequest="21" 
-                                   HeightRequest="21"
-                                   VerticalOptions="Center"
-                                   Margin="0,0,10,0"/>
+                        <Frame BackgroundColor="#FCFCFC"
+                               CornerRadius="15"
+                               HasShadow="False"
+                               Padding="10"
+                               Margin="0,5">
 
-                            <!-- Cabecalho -->
-                            <Label Text="Dist&#226;ncia" 
-                                   Grid.Row="0" 
-                                   Grid.Column="1"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#214F4B"/>
-                            <Label Text="Pace" 
-                                   Grid.Row="0" 
-                                   Grid.Column="2"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#214F4B"/>
+                            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" 
+                                  RowDefinitions="Auto,Auto" 
+                                  VerticalOptions="Center" 
+                                  ColumnSpacing="10"
+                                  Padding="5">
 
-                            <!-- Valores da corrida -->
-                            <Label Text="{Binding Distancia}" 
-                                   Grid.Row="1" 
-                                   Grid.Column="1"
-                                   FontSize="16"
-                                   TextColor="Black"/>
-                            <Label Text="{Binding Ritmo}" 
-                                   Grid.Row="1" 
-                                   Grid.Column="2"
-                                   FontSize="16"
-                                   TextColor="Black"/>
+                                <Image Source="objective.png" 
+                                       Grid.RowSpan="2" 
+                                       Grid.Column="0"
+                                       WidthRequest="21" 
+                                       HeightRequest="21"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,10,0"/>
 
-                            <!-- Horario da corrida -->
-                            <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
-                                   Grid.RowSpan="2" 
-                                   Grid.Column="3"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#214F4B"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="End"/>
+                                <Label Text="Distância" 
+                                       Grid.Row="0" 
+                                       Grid.Column="1"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#214F4B"/>
+                                <Label Text="Pace" 
+                                       Grid.Row="0" 
+                                       Grid.Column="2"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#214F4B"/>
 
-                            <Image Source="clock.png" 
-                                   Grid.RowSpan="2" 
-                                   Grid.Column="4"
-                                   WidthRequest="21" 
-                                   HeightRequest="21"
-                                   VerticalOptions="Center"
-                                   Margin="10,0,0,0"/>
-                        </Grid>
+                                <Label Text="{Binding Distancia}" 
+                                       Grid.Row="1" 
+                                       Grid.Column="1"
+                                       FontSize="16"
+                                       TextColor="Black"/>
+                                <Label Text="{Binding Ritmo}" 
+                                       Grid.Row="1" 
+                                       Grid.Column="2"
+                                       FontSize="16"
+                                       TextColor="Black"/>
 
-                        <!-- TapGesture para abrir detalhes da corrida -->
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer 
-                                Command="{Binding Source={x:Reference LixoCollectionView}, Path=BindingContext.ItemTappedCommand}"
-                                CommandParameter="{Binding .}" />
-                        </Frame.GestureRecognizers>
-                    </Frame>
-                </SwipeView>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-    </CollectionView>
+                                <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
+                                       Grid.RowSpan="2" 
+                                       Grid.Column="3"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#214F4B"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="End"/>
+
+                                <Image Source="clock.png" 
+                                       Grid.RowSpan="2" 
+                                       Grid.Column="4"
+                                       WidthRequest="21" 
+                                       HeightRequest="21"
+                                       VerticalOptions="Center"
+                                       Margin="10,0,0,0"/>
+                            </Grid>
+
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={x:Reference LixoCollectionView}, Path=BindingContext.ItemTappedCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

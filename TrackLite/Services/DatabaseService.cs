@@ -1,4 +1,5 @@
 ﻿using SQLite;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TrackLite.Models;
@@ -36,8 +37,14 @@ namespace TrackLite.Services
                       .ToListAsync();
         }
 
-        public Task<int> SalvarCorridaAsync(Corrida corrida)
+        public Task<int> SalvarCorridaAsync(Corrida corrida, bool dataAntiga = false)
         {
+
+            if (dataAntiga)
+            {
+                corrida.Data = DateTime.Now.AddDays(-40);
+            }
+
             if (corrida.Id == 0)
                 return _db.InsertAsync(corrida);
             else
@@ -59,6 +66,20 @@ namespace TrackLite.Services
         public Task<int> DeleteCorridaAsync(Corrida corrida)
         {
             return _db.DeleteAsync(corrida);
+        }
+
+        public async Task RemoverLixeiraExpiradaAsync(int dias = 30)
+        {
+            var limite = DateTime.Now.AddDays(-dias);
+
+            var corridasExpiradas = await _db.Table<Corrida>()
+                                             .Where(c => c.Lixeira && c.Data < limite)
+                                             .ToListAsync();
+
+            foreach (var corrida in corridasExpiradas)
+            {
+                await _db.DeleteAsync(corrida);
+            }
         }
     }
 }

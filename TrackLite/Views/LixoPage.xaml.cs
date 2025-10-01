@@ -12,10 +12,8 @@ public partial class LixoPage : ContentPage
 {
     private readonly DatabaseService _databaseService;
 
-    // Corridas na lixeira
     public ObservableCollection<Corrida> CorridasLixo { get; set; } = new ObservableCollection<Corrida>();
 
-    // Corridas agrupadas por data
     public ObservableCollection<CorridaGroup> CorridasLixoAgrupadas { get; set; } = new();
 
     public LixoPage()
@@ -33,6 +31,9 @@ public partial class LixoPage : ContentPage
 
     private async Task CarregarLixeiraAsync()
     {
+
+        await _databaseService.RemoverLixeiraExpiradaAsync();
+
         var lixeira = await _databaseService.GetLixeiraAsync();
         CorridasLixo.Clear();
         foreach (var corrida in lixeira)
@@ -41,7 +42,6 @@ public partial class LixoPage : ContentPage
         OrdenarLixo();
     }
 
-    // Ordena as corridas na lixeira por data e agrupa-as
     public void OrdenarLixo()
     {
         var culturaPT = new CultureInfo("pt-BR");
@@ -61,7 +61,6 @@ public partial class LixoPage : ContentPage
             CorridasLixoAgrupadas.Add(grupo);
     }
 
-    // Restaura a corrida da lixeira
     private async void OnRestaurarInvoked(object sender, EventArgs e)
     {
         if (sender is SwipeItemView swipeItemView && swipeItemView.BindingContext is Corrida corrida)
@@ -82,7 +81,6 @@ public partial class LixoPage : ContentPage
         }
     }
 
-    // Exclui permanentemente a corrida da lixeira
     private async void OnExcluirInvoked(object sender, EventArgs e)
     {
         if (sender is SwipeItemView swipeItemView && swipeItemView.BindingContext is Corrida corrida)
@@ -103,7 +101,6 @@ public partial class LixoPage : ContentPage
         }
     }
 
-    // Comando para quando um item é tocado 
     public ICommand ItemTappedCommand => new Command<Corrida>(async (corrida) =>
     {
         if (corrida == null) return;
