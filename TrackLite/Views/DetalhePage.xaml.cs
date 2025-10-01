@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using Microsoft.Maui.Storage;
 using SkiaSharp;
+using TrackLite.Models;
+using TrackLite.Services;
 
 namespace TrackLite
 {
@@ -11,6 +13,8 @@ namespace TrackLite
     public partial class DetalhePage : ContentPage
     {
         private Corrida? corridaSelecionada;
+        private readonly DatabaseService _databaseService = new DatabaseService();
+
         public Corrida? CorridaSelecionada
         {
             get => corridaSelecionada;
@@ -41,6 +45,8 @@ namespace TrackLite
 
                 if (double.TryParse(
                         CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."),
+                        NumberStyles.Any,
+                        CultureInfo.InvariantCulture,
                         out double km))
                 {
                     double passos = km * 1400;
@@ -105,26 +111,27 @@ namespace TrackLite
 
                     var headerTextPaint = new SKPaint
                     {
-                        Color = new SKColor(0xFC, 0xFC, 0xFC),
+                        Color = SKColors.White,
                         TextSize = 18,
                         IsAntialias = true,
                         Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
                     };
+
                     string headerText = "TrackLite";
                     var headerTextWidth = headerTextPaint.MeasureText(headerText);
                     canvas.DrawText(headerText, (pageWidth - headerTextWidth) / 2, 27, headerTextPaint);
 
-                    var shadowPaint = new SKPaint
+                    var paintTitle = new SKPaint
                     {
-                        Color = SKColors.LightGray.WithAlpha(120),
+                        Color = new SKColor(0x21, 0x4F, 0x4B),
                         TextSize = 28,
                         IsAntialias = true,
                         Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
                     };
 
-                    var paintTitle = new SKPaint
+                    var shadowPaint = new SKPaint
                     {
-                        Color = new SKColor(0x21, 0x4F, 0x4B),
+                        Color = SKColors.LightGray.WithAlpha(120),
                         TextSize = 28,
                         IsAntialias = true,
                         Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
@@ -157,7 +164,6 @@ namespace TrackLite
                     {
                         canvas.DrawText(label, margin, y, paintSubtitle);
                         canvas.DrawText(valor, margin + 220, y, paintBody);
-
                         y += 35;
                     }
 
@@ -182,7 +188,5 @@ namespace TrackLite
                 document.EndPage();
             }
         }
-
     }
-
 }

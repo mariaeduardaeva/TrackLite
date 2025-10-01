@@ -3,13 +3,17 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Linq;
 using System.Globalization;
+using TrackLite.Models;
+using TrackLite.Services;
 
 namespace TrackLite;
 
 public partial class HistoricoPage : ContentPage
 {
+    private readonly DatabaseService _databaseService;
+
     // Coleção de corridas no histórico
-    public ObservableCollection<Corrida> Corridas { get; set; } = Lixeira.CorridasHistorico;
+    public ObservableCollection<Corrida> Corridas { get; set; } = new ObservableCollection<Corrida>();
 
     // Coleção de corridas agrupadas por data
     public ObservableCollection<CorridaGroup> CorridasAgrupadas { get; set; } = new();
@@ -18,13 +22,24 @@ public partial class HistoricoPage : ContentPage
     {
         InitializeComponent();
 
+        _databaseService = new DatabaseService();
+
         BindingContext = this;
-        OrdenarCorridas();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await CarregarHistoricoAsync();
+    }
+
+    private async Task CarregarHistoricoAsync()
+    {
+        var historico = await _databaseService.GetHistoricoAsync();
+        Corridas.Clear();
+        foreach (var corrida in historico)
+            Corridas.Add(corrida);
+
         OrdenarCorridas();
     }
 
@@ -72,7 +87,6 @@ public partial class HistoricoPage : ContentPage
         await Navigation.PushAsync(new LixoPage());
     }
 
-    // Manipula a ação de enviar uma corrida para a lixeira
     private async void OnSwipeItemInvoked(object sender, EventArgs e)
     {
         if (sender is SwipeItemView swipeItemView && swipeItemView.BindingContext is Corrida corrida)
@@ -87,47 +101,11 @@ public partial class HistoricoPage : ContentPage
             if (!resposta)
                 return;
 
-            // Remove a corrida do histórico e adiciona à lixeira   
-            Corridas.Remove(corrida);
-            Lixeira.CorridasLixo.Add(corrida);
-            OrdenarCorridas();
+            await _databaseService.MoverParaLixeiraAsync(corrida);
 
-            // Ordena a lixeira
-            var ordenadasLixo = Lixeira.CorridasLixo.OrderByDescending(c => c.Data).ToList();
-            Lixeira.CorridasLixo.Clear();
-            foreach (var c in ordenadasLixo)
-                Lixeira.CorridasLixo.Add(c);
+            Corridas.Remove(corrida);
+
+            OrdenarCorridas();
         }
     }
-}
-
-// Modelo de dados para uma corrida
-public class Corrida
-{
-    public DateTime Data { get; set; } = DateTime.Now;
-    public string Distancia { get; set; } = string.Empty;
-    public string Ritmo { get; set; } = string.Empty;
-    public string CorFundo { get; set; } = string.Empty;
-
-    public string TempoDecorrido { get; set; } = "00:00:00";
-
-    public string DataFormatada => Data.ToString("dd/MM/yyyy HH:mm");
-}
-
-// Grupo de corridas para agrupamento por data
-public class CorridaGroup : ObservableCollection<Corrida>
-{
-    public string DataChave { get; }
-
-    public CorridaGroup(string dataChave, IEnumerable<Corrida> corridas) : base(corridas)
-    {
-        DataChave = dataChave;
-    }
-}
-
-// Classe estática para gerenciar o histórico e a lixeira
-public static class Lixeira
-{
-    public static ObservableCollection<Corrida> CorridasLixo { get; } = new();
-    public static ObservableCollection<Corrida> CorridasHistorico { get; } = new();
 }

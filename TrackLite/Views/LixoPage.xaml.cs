@@ -3,13 +3,17 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Globalization;
 using System.Windows.Input;
+using TrackLite.Models;
+using TrackLite.Services;
 
 namespace TrackLite;
 
 public partial class LixoPage : ContentPage
 {
+    private readonly DatabaseService _databaseService;
+
     // Corridas na lixeira
-    public ObservableCollection<Corrida> CorridasLixo { get; set; } = Lixeira.CorridasLixo;
+    public ObservableCollection<Corrida> CorridasLixo { get; set; } = new ObservableCollection<Corrida>();
 
     // Corridas agrupadas por data
     public ObservableCollection<CorridaGroup> CorridasLixoAgrupadas { get; set; } = new();
@@ -17,16 +21,25 @@ public partial class LixoPage : ContentPage
     public LixoPage()
     {
         InitializeComponent();
+        _databaseService = new DatabaseService();
         BindingContext = this;
     }
 
-    // Ordena e agrupa as corridas ao aparecer a página
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        OrdenarLixo();
+        await CarregarLixeiraAsync();
     }
 
+    private async Task CarregarLixeiraAsync()
+    {
+        var lixeira = await _databaseService.GetLixeiraAsync();
+        CorridasLixo.Clear();
+        foreach (var corrida in lixeira)
+            CorridasLixo.Add(corrida);
+
+        OrdenarLixo();
+    }
 
     // Ordena as corridas na lixeira por data e agrupa-as
     public void OrdenarLixo()
@@ -62,22 +75,29 @@ public partial class LixoPage : ContentPage
 
             if (!resposta) return;
 
+            await _databaseService.RestaurarCorridaAsync(corrida);
+
             CorridasLixo.Remove(corrida);
-
-            Lixeira.CorridasHistorico.Add(corrida);
-
-            var historicoPage = Shell.Current.CurrentPage as HistoricoPage;
-            historicoPage?.OrdenarCorridas();
-
             OrdenarLixo();
         }
     }
 
     // Exclui permanentemente a corrida da lixeira
-    private void OnExcluirInvoked(object sender, EventArgs e)
+    private async void OnExcluirInvoked(object sender, EventArgs e)
     {
         if (sender is SwipeItemView swipeItemView && swipeItemView.BindingContext is Corrida corrida)
         {
+            bool resposta = await DisplayAlert(
+                "Confirmação",
+                $"Deseja excluir permanentemente a corrida de {corrida.Data:dd/MM/yyyy HH:mm}?",
+                "Sim",
+                "Não"
+            );
+
+            if (!resposta) return;
+
+            await _databaseService.DeleteCorridaAsync(corrida);
+
             CorridasLixo.Remove(corrida);
             OrdenarLixo();
         }
