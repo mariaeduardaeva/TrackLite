@@ -275,6 +275,9 @@ setTimeout(function() {{
 
         private async Task LimparEstado()
         {
+            (double lat, double lng)? ultimoPonto = null;
+            if (rota.Count > 0) ultimoPonto = rota[^1];
+
             rota.Clear();
             rotaBuffer.Clear();
             tempoDecorrido = TimeSpan.Zero;
@@ -283,7 +286,17 @@ setTimeout(function() {{
             PaceLabel.Text = "0:00";
             ultimaDistanciaVibrada = 0;
             Preferences.Clear();
-            if (mapaPronto) { try { await MapWebView.EvaluateJavaScriptAsync("limparRota();"); await MapWebView.EvaluateJavaScriptAsync("usuarioMarker.setLatLng([0,0]);"); } catch { } }
+
+            if (mapaPronto)
+            {
+                try
+                {
+                    await MapWebView.EvaluateJavaScriptAsync("limparRota();");
+                    if (ultimoPonto.HasValue)
+                        await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({ultimoPonto.Value.lat}, {ultimoPonto.Value.lng});");
+                }
+                catch { }
+            }
         }
 
         private async void SalvarRotaNoHistorico()
