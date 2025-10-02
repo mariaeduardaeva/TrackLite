@@ -125,7 +125,7 @@ namespace TrackLite
                         IsAntialias = true,
                         Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
                     };
-                    string title = "Relatório da Corrida";
+                    string title = "Relat처rio da Corrida";
                     var titleWidth = paintTitle.MeasureText(title);
                     canvas.DrawText(title, (pageWidth - titleWidth) / 2, 85, paintTitle);
 
@@ -156,7 +156,7 @@ namespace TrackLite
 
                     DesenharLinha("Data:", corrida.Data.ToString("dd/MM/yyyy HH:mm"));
                     DesenharLinha("Tempo:", corrida.TempoDecorrido);
-                    DesenharLinha("Distância:", corrida.Distancia);
+                    DesenharLinha("Dist창ncia:", corrida.Distancia);
                     DesenharLinha("Ritmo:", corrida.Ritmo);
                     DesenharLinha("Passos estimados:", PassosEstimados);
 
@@ -190,7 +190,7 @@ namespace TrackLite
 
             sb.AppendLine($"Data,{CorridaSelecionada.Data:dd/MM/yyyy HH:mm}");
             sb.AppendLine($"Tempo,{CorridaSelecionada.TempoDecorrido}");
-            sb.AppendLine($"Distância,{CorridaSelecionada.Distancia}");
+            sb.AppendLine($"Dist창ncia,{CorridaSelecionada.Distancia}");
             sb.AppendLine($"Ritmo,{CorridaSelecionada.Ritmo}");
             sb.AppendLine($"Passos Estimados,{PassosEstimados}");
 
@@ -235,7 +235,7 @@ namespace TrackLite
                         IsAntialias = true,
                         Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
                     };
-                    string title = "Relatório CSV";
+                    string title = "Relat처rio CSV";
                     var titleWidth = paintTitle.MeasureText(title);
                     canvas.DrawText(title, (pageWidth - titleWidth) / 2, 85, paintTitle);
 
@@ -253,7 +253,7 @@ namespace TrackLite
                     foreach (var linha in linhas)
                     {
                         canvas.DrawText(linha, margin, y, paintBody);
-                        y += 20; 
+                        y += 20;
                     }
 
                     var rodapePaint = new SKPaint
