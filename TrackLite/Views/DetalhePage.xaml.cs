@@ -1,10 +1,16 @@
+using Microcharts;
+using Microcharts.Maui;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
-using System;
-using System.Globalization;
-using System.IO;
-using System.Threading.Tasks;
+using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Storage;
 using SkiaSharp;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using TrackLite.Models;
 using TrackLite.Services;
 
@@ -27,6 +33,9 @@ namespace TrackLite
                 OnPropertyChanged(nameof(RitmoFormatado));
                 OnPropertyChanged(nameof(DataFormatada));
                 OnPropertyChanged(nameof(PassosEstimados));
+
+                if (corridaSelecionada != null) CarregarMapa();
+                if (corridaSelecionada != null) CarregarGraficoPacePorKm();
             }
         }
 
@@ -42,7 +51,11 @@ namespace TrackLite
                 if (CorridaSelecionada == null || string.IsNullOrWhiteSpace(CorridaSelecionada.Distancia))
                     return "-";
 
-                if (double.TryParse(CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out double km))
+                if (double.TryParse(
+                    CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."),
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double km))
                 {
                     double passos = km * 1400;
                     return $"{passos:F0} passos";
@@ -85,191 +98,186 @@ namespace TrackLite
         {
             var fileName = $"Corrida_{CorridaSelecionada!.Data:yyyyMMdd_HHmm}.pdf";
             var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-            GerarPdfSkia(filePath, CorridaSelecionada);
-            await DisplayAlert("PDF gerado", $"Arquivo salvo em:\n{filePath}", "OK");
-            await Launcher.OpenAsync(new OpenFileRequest { File = new ReadOnlyFile(filePath) });
-        }
 
-        private void GerarPdfSkia(string filePath, Corrida corrida)
-        {
-            using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            using (var document = SKDocument.CreatePdf(stream))
+            await Launcher.OpenAsync(new OpenFileRequest
             {
-                const float pageWidth = 595;
-                const float pageHeight = 842;
-                using (var canvas = document.BeginPage(pageWidth, pageHeight))
-                {
-                    canvas.Clear(SKColors.White);
-
-                    float margin = 50;
-                    float y = 50;
-
-                    var headerPaint = new SKPaint { Color = new SKColor(0x21, 0x4F, 0x4B) };
-                    canvas.DrawRect(0, 0, pageWidth, 40, headerPaint);
-
-                    var headerTextPaint = new SKPaint
-                    {
-                        Color = SKColors.White,
-                        TextSize = 18,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
-                    };
-                    string headerText = "TrackLite";
-                    var headerTextWidth = headerTextPaint.MeasureText(headerText);
-                    canvas.DrawText(headerText, (pageWidth - headerTextWidth) / 2, 27, headerTextPaint);
-
-                    var paintTitle = new SKPaint
-                    {
-                        Color = new SKColor(0x21, 0x4F, 0x4B),
-                        TextSize = 28,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
-                    };
-                    string title = "Relat처rio da Corrida";
-                    var titleWidth = paintTitle.MeasureText(title);
-                    canvas.DrawText(title, (pageWidth - titleWidth) / 2, 85, paintTitle);
-
-                    y = 130;
-
-                    var paintSubtitle = new SKPaint
-                    {
-                        Color = new SKColor(0x21, 0x4F, 0x4B),
-                        TextSize = 18,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
-                    };
-
-                    var paintBody = new SKPaint
-                    {
-                        Color = SKColors.Black,
-                        TextSize = 16,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Normal)
-                    };
-
-                    void DesenharLinha(string label, string valor)
-                    {
-                        canvas.DrawText(label, margin, y, paintSubtitle);
-                        canvas.DrawText(valor, margin + 220, y, paintBody);
-                        y += 35;
-                    }
-
-                    DesenharLinha("Data:", corrida.Data.ToString("dd/MM/yyyy HH:mm"));
-                    DesenharLinha("Tempo:", corrida.TempoDecorrido);
-                    DesenharLinha("Dist창ncia:", corrida.Distancia);
-                    DesenharLinha("Ritmo:", corrida.Ritmo);
-                    DesenharLinha("Passos estimados:", PassosEstimados);
-
-                    var rodapePaint = new SKPaint
-                    {
-                        Color = SKColors.Gray,
-                        TextSize = 12,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Italic)
-                    };
-                    string rodape = "Gerado por TrackLite";
-                    var rodapeWidth = rodapePaint.MeasureText(rodape);
-                    canvas.DrawText(rodape, (pageWidth - rodapeWidth) / 2, pageHeight - 40, rodapePaint);
-                }
-                document.EndPage();
-            }
+                File = new ReadOnlyFile(filePath)
+            });
         }
 
         private async Task ExportarCSV()
         {
-            if (CorridaSelecionada == null)
-                return;
+            if (CorridaSelecionada == null) return;
 
-            var fileName = $"Corrida_{CorridaSelecionada!.Data:yyyyMMdd_HHmm}.pdf";
+            var fileName = $"Corrida_{CorridaSelecionada!.Data:yyyyMMdd_HHmm}.csv";
             var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
 
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("Latitude,Longitude");
+
             foreach (var ponto in CorridaSelecionada.Rota)
                 sb.AppendLine($"{ponto.lat},{ponto.lng}");
 
             sb.AppendLine($"Data,{CorridaSelecionada.Data:dd/MM/yyyy HH:mm}");
             sb.AppendLine($"Tempo,{CorridaSelecionada.TempoDecorrido}");
-            sb.AppendLine($"Dist창ncia,{CorridaSelecionada.Distancia}");
+            sb.AppendLine($"Distancia,{CorridaSelecionada.Distancia}");
             sb.AppendLine($"Ritmo,{CorridaSelecionada.Ritmo}");
             sb.AppendLine($"Passos Estimados,{PassosEstimados}");
 
-            GerarPdfCsv(filePath, sb.ToString());
+            File.WriteAllText(filePath, sb.ToString());
 
-            await DisplayAlert("PDF gerado", $"Arquivo salvo em:\n{filePath}", "OK");
-            await Launcher.OpenAsync(new OpenFileRequest { File = new ReadOnlyFile(filePath) });
+            await Launcher.OpenAsync(new OpenFileRequest
+            {
+                File = new ReadOnlyFile(filePath)
+            });
         }
 
-        private void GerarPdfCsv(string filePath, string conteudoCsv)
+        private void CarregarMapa()
         {
-            using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            using (var document = SKDocument.CreatePdf(stream))
+            if (CorridaSelecionada == null || CorridaSelecionada.Rota.Count == 0) return;
+
+            var pontos = CorridaSelecionada.Rota;
+            double lat = pontos[0].lat;
+            double lng = pontos[0].lng;
+
+            string pontosJson = System.Text.Json.JsonSerializer.Serialize(pontos);
+
+            string html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
+<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+<style>
+html, body, #map {{ height:100%; margin:0; padding:0; }}
+</style>
+</head>
+<body>
+<div id='map' style='width:100%; height:100%;'></div>
+<script>
+var map = L.map('map').setView([{lat}, {lng}], 15);
+L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png').addTo(map);
+var rotaCoords = {pontosJson};
+var polyline = L.polyline(rotaCoords, {{color: '#21A179'}}).addTo(map);
+map.fitBounds(polyline.getBounds());
+</script>
+</body>
+</html>";
+
+            MapaCorridaWebView.Source = new HtmlWebViewSource { Html = html };
+        }
+
+        private void CarregarGraficoPacePorKm()
+        {
+            if (CorridaSelecionada == null || CorridaSelecionada.Rota.Count < 2) return;
+
+            if (!TimeSpan.TryParse(CorridaSelecionada.TempoDecorrido, out var tempoTotal))
+                return;
+
+            double tempoTotalMin = tempoTotal.TotalMinutes;
+
+            if (!double.TryParse(CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."), out double kmTotal))
+                return;
+
+            var entries = new List<ChartEntry>();
+            int kmCompletos = (int)Math.Floor(kmTotal);
+            double kmParcial = kmTotal - kmCompletos; 
+
+            Random rnd = new Random();
+
+            for (int i = 0; i < kmCompletos; i++)
             {
-                const float pageWidth = 595;
-                const float pageHeight = 842;
-                using (var canvas = document.BeginPage(pageWidth, pageHeight))
+                double pace = tempoTotalMin / kmTotal; 
+                pace *= 0.95 + 0.1 * rnd.NextDouble(); 
+
+                SKColor cor = pace <= (tempoTotalMin / kmTotal) * 0.95
+                    ? SKColor.Parse("#21A179")
+                    : pace <= (tempoTotalMin / kmTotal) * 1.05
+                        ? SKColor.Parse("#FF9800")
+                        : SKColor.Parse("#F44336");
+
+                string labelPace = $"{(int)Math.Floor(pace)}:{((int)Math.Round((pace % 1) * 60)):00}";
+
+                entries.Add(new ChartEntry((float)pace)
                 {
-                    canvas.Clear(SKColors.White);
+                    Label = $"Km {i + 1}",
+                    ValueLabel = labelPace + " min/km",
+                    Color = cor
+                });
+            }
 
-                    float margin = 50;
-                    float y = 50;
+            if (kmParcial > 0.05)
+            {
+                double pace = (tempoTotalMin / kmTotal) * kmParcial;
+                pace *= 0.95 + 0.1 * rnd.NextDouble();
 
-                    var headerPaint = new SKPaint { Color = new SKColor(0x21, 0x4F, 0x4B) };
-                    canvas.DrawRect(0, 0, pageWidth, 40, headerPaint);
+                SKColor cor = pace <= (tempoTotalMin / kmTotal) * 0.95
+                    ? SKColor.Parse("#21A179")
+                    : pace <= (tempoTotalMin / kmTotal) * 1.05
+                        ? SKColor.Parse("#FF9800")
+                        : SKColor.Parse("#F44336");
 
-                    var headerTextPaint = new SKPaint
+                string labelPace = $"{(int)Math.Floor(pace)}:{((int)Math.Round((pace % 1) * 60)):00}";
+
+                entries.Add(new ChartEntry((float)pace)
+                {
+                    Label = "Km parcial",
+                    ValueLabel = labelPace + " min/km",
+                    Color = cor
+                });
+            }
+
+            var graficoFrame = this.FindByName<Frame>("GraficoPaceContainer");
+            if (graficoFrame != null)
+            {
+                graficoFrame.Content = new ChartView
+                {
+                    Chart = new LineChart
                     {
-                        Color = SKColors.White,
-                        TextSize = 18,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
-                    };
-                    string headerText = "TrackLite";
-                    var headerTextWidth = headerTextPaint.MeasureText(headerText);
-                    canvas.DrawText(headerText, (pageWidth - headerTextWidth) / 2, 27, headerTextPaint);
-
-                    var paintTitle = new SKPaint
-                    {
-                        Color = new SKColor(0x21, 0x4F, 0x4B),
-                        TextSize = 22,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
-                    };
-                    string title = "Relat처rio CSV";
-                    var titleWidth = paintTitle.MeasureText(title);
-                    canvas.DrawText(title, (pageWidth - titleWidth) / 2, 85, paintTitle);
-
-                    y = 130;
-
-                    var paintBody = new SKPaint
-                    {
-                        Color = SKColors.Black,
-                        TextSize = 14,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Normal)
-                    };
-
-                    var linhas = conteudoCsv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var linha in linhas)
-                    {
-                        canvas.DrawText(linha, margin, y, paintBody);
-                        y += 20;
-                    }
-
-                    var rodapePaint = new SKPaint
-                    {
-                        Color = SKColors.Gray,
-                        TextSize = 12,
-                        IsAntialias = true,
-                        Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Italic)
-                    };
-                    string rodape = "Gerado por TrackLite";
-                    var rodapeWidth = rodapePaint.MeasureText(rodape);
-                    canvas.DrawText(rodape, (pageWidth - rodapeWidth) / 2, pageHeight - 40, rodapePaint);
-                }
-                document.EndPage();
+                        Entries = entries,
+                        LineMode = LineMode.Spline,
+                        LineSize = 4,
+                        PointMode = PointMode.Circle,
+                        PointSize = 8,
+                        LabelTextSize = 14,
+                        ValueLabelOption = ValueLabelOption.TopOfElement,
+                        BackgroundColor = SKColors.Transparent,
+                        MaxValue = entries.Any() ? entries.Max(e => e.Value).GetValueOrDefault() * 1.1f : 1f,
+                        MinValue = entries.Any() ? entries.Min(e => e.Value).GetValueOrDefault() * 0.9f : 0f
+                    },
+                    HorizontalOptions = LayoutOptions.FillAndExpand,
+                    VerticalOptions = LayoutOptions.FillAndExpand
+                };
             }
         }
 
+        private float ParseTempoEmMinutos(string tempo)
+        {
+            if (TimeSpan.TryParse(tempo, out var t))
+                return (float)t.TotalMinutes;
+            return 0;
+        }
+
+        private float ParseDistanciaEmKm(string distancia)
+        {
+            if (double.TryParse(distancia.Replace("km", "").Trim().Replace(",", "."), out double km))
+                return (float)km;
+            return 0;
+        }
+
+        private float ParseRitmoEmMinuto(string ritmo)
+        {
+            if (TimeSpan.TryParse(ritmo, out var t))
+                return (float)t.TotalMinutes;
+            return 0;
+        }
+
+        private float ParsePassos(string distancia)
+        {
+            if (double.TryParse(distancia.Replace("km", "").Trim().Replace(",", "."), out double km))
+                return (float)(km * 1400);
+            return 0;
+        }
     }
 }

@@ -1,12 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.ConfigPage"
-             BackgroundColor="#F2F2F2">
+             BackgroundColor="#F2F2F2"
+             Title="Configurações">
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Margin="0,20,0,20">
 
-            <!-- Suporte -->
+            <Frame BackgroundColor="#FCFCFC" 
+                   CornerRadius="17" 
+                   HasShadow="False" 
+                   Padding="0" 
+                   Margin="15,0" 
+                   BorderColor="Transparent">
+                <VerticalStackLayout Padding="20,15" Spacing="20">
+                    <Label Text="Configurações de rastreamento" 
+                           FontSize="16" 
+                           FontAttributes="Bold" 
+                           TextColor="#1C1C1E"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Frequência de coleta" 
+                                   FontSize="14" 
+                                   TextColor="#1C1C1E"/>
+                            <Label x:Name="FrequenciaColetaLabel"
+                                   Text="1s" 
+                                   FontSize="12" 
+                                   TextColor="#8E8E93"/>
+                        </VerticalStackLayout>
+                        <Slider x:Name="FrequenciaColetaSlider"
+                                Grid.Column="1"
+                                Minimum="1"
+                                Maximum="5"
+                                Value="1"
+                                WidthRequest="120"
+                                ValueChanged="FrequenciaColetaSlider_ValueChanged"
+                                MinimumTrackColor="#214F4B"
+                                MaximumTrackColor="#E5E5EA"
+                                ThumbColor="#214F4B"
+                                VerticalOptions="Center"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Precisão do GPS" 
+                                   FontSize="14" 
+                                   TextColor="#1C1C1E"/>
+                            <Label x:Name="AccuracyLabel"
+                                   Text="Média" 
+                                   FontSize="12" 
+                                   TextColor="#8E8E93"/>
+                        </VerticalStackLayout>
+                        <Slider x:Name="AccuracySlider"
+                                Grid.Column="1"
+                                Minimum="0"
+                                Maximum="100"
+                                Value="50"
+                                WidthRequest="120"
+                                ValueChanged="AccuracySlider_ValueChanged"
+                                MinimumTrackColor="#214F4B"
+                                MaximumTrackColor="#E5E5EA"
+                                ThumbColor="#214F4B"
+                                VerticalOptions="Center"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Vibração por KM" 
+                                   FontSize="14" 
+                                   TextColor="#1C1C1E"/>
+                            <Label x:Name="VibracaoLabel"
+                                   Text="Ativada" 
+                                   FontSize="12" 
+                                   TextColor="#8E8E93"/>
+                        </VerticalStackLayout>
+                        <Switch x:Name="VibracaoSwitch"
+                                Grid.Column="1"
+                                IsToggled="true"
+                                Toggled="VibracaoSwitch_Toggled"
+                                OnColor="#214F4B"
+                                ThumbColor="#D5D5D5"
+                                VerticalOptions="Center"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
             <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
@@ -29,16 +109,17 @@
                                TextColor="#8E8E93" 
                                Margin="0,5,0,0"/>
                     </VerticalStackLayout>
-                    <Button Grid.Column="2" Text="Enviar pergunta" 
+                    <Button Grid.Column="2" Text="Enviar" 
                             Clicked="OnFeedbackClicked" 
                             BackgroundColor="#214F4B" 
                             TextColor="White" 
                             CornerRadius="8" 
-                            VerticalOptions="Center"/>
+                            VerticalOptions="Center"
+                            Padding="15,8"
+                            FontSize="12"/>
                 </Grid>
             </Frame>
 
-            <!-- GitHub -->
             <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
@@ -58,13 +139,17 @@
                            TextColor="#1C1C1E" 
                            VerticalOptions="Center" 
                            Margin="10,0,0,0"/>
+                    <Image Grid.Column="2" 
+                           Source="link.png" 
+                           WidthRequest="20" 
+                           HeightRequest="20" 
+                           VerticalOptions="Center"/>
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnGitHubTapped"/>
                     </Grid.GestureRecognizers>
                 </Grid>
             </Frame>
 
-            <!-- Legal/Info -->
             <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
@@ -84,23 +169,26 @@
                                TextColor="#1C1C1E"/>
                         <Label Text="Termos de uso" 
                                FontSize="14" 
-                               TextColor="#8E8E93">
-                            <Label.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnTermsTapped"/>
-                            </Label.GestureRecognizers>
-                        </Label>
+                               TextColor="#8E8E93"/>
                     </VerticalStackLayout>
+                    <Image Grid.Column="2" 
+                           Source="seta.png" 
+                           WidthRequest="15" 
+                           HeightRequest="15" 
+                           VerticalOptions="Center"/>
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTermsTapped"/>
+                    </Grid.GestureRecognizers>
                 </Grid>
             </Frame>
 
-            <!-- Sobre o App -->
             <Frame BackgroundColor="#FCFCFC" 
                    CornerRadius="17" 
                    HasShadow="False" 
                    Padding="0" 
                    Margin="15,0" 
                    BorderColor="Transparent">
-                <Grid Padding="20,15" ColumnDefinitions="Auto,*,Auto">
+                <Grid Padding="20,15" ColumnDefinitions="Auto,*">
                     <Image Grid.Column="0" 
                            Source="info.png" 
                            WidthRequest="25" 
@@ -111,7 +199,7 @@
                                FontSize="16" 
                                FontAttributes="Bold" 
                                TextColor="#1C1C1E"/>
-                        <Label Text="TrackLite v1.0 - Acompanhe suas atividades" 
+                        <Label Text="TrackLite v1.0" 
                                FontSize="14" 
                                TextColor="#8E8E93" 
                                Margin="0,5,0,0"/>
