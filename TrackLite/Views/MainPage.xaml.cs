@@ -33,6 +33,10 @@ namespace TrackLite
         private double _limiarAccuracy = 20.0;
         private bool _vibracaoKmAtivada = true;
 
+        private List<TimeSpan> temposPorKm = new List<TimeSpan>();
+        private double kmAtual = 1.0;
+        private TimeSpan tempoUltimoKm = TimeSpan.Zero;
+
         public MainPage()
         {
             InitializeComponent();
@@ -241,6 +245,17 @@ setTimeout(function() {{
                 Preferences.Set("Tempo", tempoDecorrido.Ticks);
                 Preferences.Set("IsTracking", isTracking);
                 Preferences.Set("UltimaDistanciaVibrada", ultimaDistanciaVibrada);
+
+                var temposTicks = new List<long>();
+                foreach (var tempo in temposPorKm)
+                {
+                    temposTicks.Add(tempo.Ticks);
+                }
+                Preferences.Set("TemposPorKm", JsonSerializer.Serialize(temposTicks));
+
+                Preferences.Set("KmAtual", kmAtual);
+                Preferences.Set("TempoUltimoKm", tempoUltimoKm.Ticks);
+
                 _ = SaveStateImmediately();
             }
             catch { }
@@ -262,6 +277,27 @@ setTimeout(function() {{
             if (Preferences.ContainsKey("Tempo")) tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
             else tempoDecorrido = TimeSpan.Zero;
             if (Preferences.ContainsKey("UltimaDistanciaVibrada")) ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
+
+            if (Preferences.ContainsKey("TemposPorKm"))
+            {
+                var jsonTempos = Preferences.Get("TemposPorKm", "");
+                if (!string.IsNullOrEmpty(jsonTempos))
+                {
+                    var tempos = JsonSerializer.Deserialize<List<long>>(jsonTempos);
+                    if (tempos != null)
+                    {
+                        temposPorKm.Clear();
+                        foreach (var ticks in tempos)
+                        {
+                            temposPorKm.Add(TimeSpan.FromTicks(ticks));
+                        }
+                    }
+                }
+            }
+
+            kmAtual = Preferences.Get("KmAtual", 1.0);
+            tempoUltimoKm = TimeSpan.FromTicks(Preferences.Get("TempoUltimoKm", 0L));
+
             TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
             AtualizarDistanciaEPace();
             isTracking = false;
@@ -354,6 +390,11 @@ setTimeout(function() {{
             DistanciaLabel.Text = "0 km";
             PaceLabel.Text = "0:00";
             ultimaDistanciaVibrada = 0;
+
+            temposPorKm.Clear();
+            tempoUltimoKm = TimeSpan.Zero;
+            kmAtual = 1.0;
+
             Preferences.Clear();
             if (mapaPronto)
             {
@@ -376,7 +417,8 @@ setTimeout(function() {{
                 Distancia = $"{distanciaKm:F2} km",
                 Ritmo = PaceLabel.Text,
                 TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss"),
-                Rota = rota
+                Rota = rota,
+                TemposPorKm = new List<TimeSpan>(temposPorKm)
             };
             await _databaseService.SalvarCorridaAsync(corrida);
         }
@@ -408,11 +450,20 @@ setTimeout(function() {{
             double distancia = CalcularDistanciaTotal();
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
-            if (_vibracaoKmAtivada && distanciaKm - ultimaDistanciaVibrada >= 1.0)
+
+            if (isTracking && distanciaKm >= kmAtual)
             {
-                ultimaDistanciaVibrada = Math.Floor(distanciaKm);
-                Vibrar();
+                TimeSpan tempoEsteKm = tempoDecorrido - tempoUltimoKm;
+                temposPorKm.Add(tempoEsteKm);
+                tempoUltimoKm = tempoDecorrido;
+                kmAtual++;
+
+                if (_vibracaoKmAtivada)
+                {
+                    Vibrar();
+                }
             }
+
             if (distanciaKm >= 0.05 && tempoDecorrido.TotalSeconds > 0)
             {
                 double paceSegundosPorKm = tempoDecorrido.TotalSeconds / distanciaKm;
@@ -421,7 +472,10 @@ setTimeout(function() {{
                 if (paceSec == 60) { paceSec = 0; paceMin++; }
                 PaceLabel.Text = $"{paceMin}:{paceSec:D2}";
             }
-            else PaceLabel.Text = "0:00";
+            else
+            {
+                PaceLabel.Text = "0:00";
+            }
         }
 
         private void Vibrar()
@@ -532,6 +586,27 @@ setTimeout(function() {{
 
             if (Preferences.ContainsKey("Tempo")) tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
             if (Preferences.ContainsKey("UltimaDistanciaVibrada")) ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
+
+            if (Preferences.ContainsKey("TemposPorKm"))
+            {
+                var jsonTempos = Preferences.Get("TemposPorKm", "");
+                if (!string.IsNullOrEmpty(jsonTempos))
+                {
+                    var tempos = JsonSerializer.Deserialize<List<long>>(jsonTempos);
+                    if (tempos != null)
+                    {
+                        temposPorKm.Clear();
+                        foreach (var ticks in tempos)
+                        {
+                            temposPorKm.Add(TimeSpan.FromTicks(ticks));
+                        }
+                    }
+                }
+            }
+
+            kmAtual = Preferences.Get("KmAtual", 1.0);
+            tempoUltimoKm = TimeSpan.FromTicks(Preferences.Get("TempoUltimoKm", 0L));
+
             bool wasTracking = Preferences.Get("IsTracking", false);
             TempoLabel.Text = tempoDecorrido.ToString(@"hh\\:mm\\:ss");
             AtualizarDistanciaEPace();

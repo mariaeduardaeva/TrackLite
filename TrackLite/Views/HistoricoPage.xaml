@@ -4,7 +4,6 @@
              BackgroundColor="#F2F2F2"
              Title="Histórico">
 
-    <!-- Toolbar -->
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Lixo"
                      IconImageSource="lixo_p.png"
@@ -13,14 +12,12 @@
                      Clicked="OnLixoClicked" />
     </ContentPage.ToolbarItems>
 
-    <!-- CollectionView de Corridas Agrupadas -->
     <CollectionView x:Name="CorridasCollectionView"
                     ItemsSource="{Binding CorridasAgrupadas}"
                     IsGrouped="True"
                     SelectionMode="None"
                     Margin="15,10">
 
-        <!-- Cabeçalho do Grupo (Data) -->
         <CollectionView.GroupHeaderTemplate>
             <DataTemplate>
                 <Label Text="{Binding DataChave}" 
@@ -30,11 +27,9 @@
             </DataTemplate>
         </CollectionView.GroupHeaderTemplate>
 
-        <!-- Template das corridas -->
         <CollectionView.ItemTemplate>
             <DataTemplate>
                 <SwipeView>
-                    <!-- Swipe para remover corridas -->
                     <SwipeView.RightItems>
                         <SwipeItems Mode="Execute">
                             <SwipeItemView Invoked="OnSwipeItemInvoked">
@@ -78,7 +73,6 @@
                                    HeightRequest="21"
                                    VerticalOptions="Center"/>
 
-                            <!-- Cabecalho -->
                             <Label Text="Distância" 
                                    Grid.Row="0" 
                                    Grid.Column="1"
@@ -91,7 +85,6 @@
                                    FontAttributes="Bold"
                                    TextColor="#214F4B"/>
 
-                            <!-- Valores das Corridas -->
                             <Label Text="{Binding Distancia}" 
                                    Grid.Row="1" 
                                    Grid.Column="1"
@@ -103,7 +96,6 @@
                                    FontSize="16"
                                    TextColor="black"/>
 
-                            <!-- Horario da Corrida -->
                             <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
                                    Grid.RowSpan="2" 
                                    Grid.Column="3"
@@ -121,7 +113,6 @@
                                    VerticalOptions="Center"/>
                         </Grid>
 
-                        <!-- Comando ao clicar na corrida -->
                         <Frame.GestureRecognizers>
                             <TapGestureRecognizer 
                                 Command="{Binding Source={x:Reference CorridasCollectionView}, Path=BindingContext.ItemTappedCommand}"

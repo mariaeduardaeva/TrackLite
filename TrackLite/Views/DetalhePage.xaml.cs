@@ -170,36 +170,41 @@ map.fitBounds(polyline.getBounds());
 
         private void CarregarGraficoPacePorKm()
         {
-            if (CorridaSelecionada == null || CorridaSelecionada.Rota.Count < 2) return;
+            if (CorridaSelecionada == null) return;
 
-            if (!TimeSpan.TryParse(CorridaSelecionada.TempoDecorrido, out var tempoTotal))
-                return;
+            if (CorridaSelecionada.TemposPorKm != null && CorridaSelecionada.TemposPorKm.Count > 0)
+            {
+                CarregarGraficoComTemposReais();
+            }
+            else
+            {
+                MostrarGraficoVazio();
+            }
+        }
 
-            double tempoTotalMin = tempoTotal.TotalMinutes;
-
-            if (!double.TryParse(CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."), out double kmTotal))
-                return;
+        private void CarregarGraficoComTemposReais()
+        {
+            if (CorridaSelecionada?.TemposPorKm == null) return;
 
             var entries = new List<ChartEntry>();
-            int kmCompletos = (int)Math.Floor(kmTotal);
-            double kmParcial = kmTotal - kmCompletos; 
+            var temposPorKm = CorridaSelecionada.TemposPorKm;
 
-            Random rnd = new Random();
+            double tempoTotalMin = temposPorKm.Sum(t => t.TotalMinutes);
+            double paceMedio = tempoTotalMin / temposPorKm.Count;
 
-            for (int i = 0; i < kmCompletos; i++)
+            for (int i = 0; i < temposPorKm.Count; i++)
             {
-                double pace = tempoTotalMin / kmTotal; 
-                pace *= 0.95 + 0.1 * rnd.NextDouble(); 
+                double paceMin = temposPorKm[i].TotalMinutes;
 
-                SKColor cor = pace <= (tempoTotalMin / kmTotal) * 0.95
+                SKColor cor = paceMin <= paceMedio * 0.95
                     ? SKColor.Parse("#21A179")
-                    : pace <= (tempoTotalMin / kmTotal) * 1.05
-                        ? SKColor.Parse("#FF9800")
+                    : paceMin <= paceMedio * 1.05
+                        ? SKColor.Parse("#FF9800") 
                         : SKColor.Parse("#F44336");
 
-                string labelPace = $"{(int)Math.Floor(pace)}:{((int)Math.Round((pace % 1) * 60)):00}";
+                string labelPace = $"{(int)Math.Floor(paceMin)}:{((int)Math.Round((paceMin % 1) * 60)):00}";
 
-                entries.Add(new ChartEntry((float)pace)
+                entries.Add(new ChartEntry((float)paceMin)
                 {
                     Label = $"Km {i + 1}",
                     ValueLabel = labelPace + " min/km",
@@ -207,26 +212,27 @@ map.fitBounds(polyline.getBounds());
                 });
             }
 
-            if (kmParcial > 0.05)
+            AtualizarGrafico(entries);
+        }
+
+        private void MostrarGraficoVazio()
+        {
+            var entries = new List<ChartEntry>
             {
-                double pace = (tempoTotalMin / kmTotal) * kmParcial;
-                pace *= 0.95 + 0.1 * rnd.NextDouble();
-
-                SKColor cor = pace <= (tempoTotalMin / kmTotal) * 0.95
-                    ? SKColor.Parse("#21A179")
-                    : pace <= (tempoTotalMin / kmTotal) * 1.05
-                        ? SKColor.Parse("#FF9800")
-                        : SKColor.Parse("#F44336");
-
-                string labelPace = $"{(int)Math.Floor(pace)}:{((int)Math.Round((pace % 1) * 60)):00}";
-
-                entries.Add(new ChartEntry((float)pace)
+                new ChartEntry(0)
                 {
-                    Label = "Km parcial",
-                    ValueLabel = labelPace + " min/km",
-                    Color = cor
-                });
-            }
+                    Label = "Sem dados",
+                    ValueLabel = "Nenhum km completo",
+                    Color = SKColor.Parse("#848484")
+                }
+            };
+
+            AtualizarGrafico(entries);
+        }
+
+        private void AtualizarGrafico(List<ChartEntry> entries)
+        {
+            if (entries.Count == 0) return;
 
             var graficoFrame = this.FindByName<Frame>("GraficoPaceContainer");
             if (graficoFrame != null)
@@ -240,44 +246,16 @@ map.fitBounds(polyline.getBounds());
                         LineSize = 4,
                         PointMode = PointMode.Circle,
                         PointSize = 8,
-                        LabelTextSize = 14,
+                        LabelTextSize = 12,
                         ValueLabelOption = ValueLabelOption.TopOfElement,
                         BackgroundColor = SKColors.Transparent,
-                        MaxValue = entries.Any() ? entries.Max(e => e.Value).GetValueOrDefault() * 1.1f : 1f,
-                        MinValue = entries.Any() ? entries.Min(e => e.Value).GetValueOrDefault() * 0.9f : 0f
+                        MaxValue = entries.Max(e => e.Value).GetValueOrDefault() * 1.1f,
+                        MinValue = entries.Min(e => e.Value).GetValueOrDefault() * 0.9f
                     },
                     HorizontalOptions = LayoutOptions.FillAndExpand,
                     VerticalOptions = LayoutOptions.FillAndExpand
                 };
             }
-        }
-
-        private float ParseTempoEmMinutos(string tempo)
-        {
-            if (TimeSpan.TryParse(tempo, out var t))
-                return (float)t.TotalMinutes;
-            return 0;
-        }
-
-        private float ParseDistanciaEmKm(string distancia)
-        {
-            if (double.TryParse(distancia.Replace("km", "").Trim().Replace(",", "."), out double km))
-                return (float)km;
-            return 0;
-        }
-
-        private float ParseRitmoEmMinuto(string ritmo)
-        {
-            if (TimeSpan.TryParse(ritmo, out var t))
-                return (float)t.TotalMinutes;
-            return 0;
-        }
-
-        private float ParsePassos(string distancia)
-        {
-            if (double.TryParse(distancia.Replace("km", "").Trim().Replace(",", "."), out double km))
-                return (float)(km * 1400);
-            return 0;
         }
     }
 }

@@ -15,6 +15,7 @@ namespace TrackLite.Models
         public string Ritmo { get; set; }
         public string TempoDecorrido { get; set; }
         public string RotaJson { get; set; }
+        public string TemposPorKmJson { get; set; } = "[]";
 
         public bool Lixeira { get; set; } = false;
 
@@ -25,11 +26,40 @@ namespace TrackLite.Models
             {
                 if (string.IsNullOrWhiteSpace(RotaJson))
                     return new List<(double lat, double lng)>();
-                return JsonSerializer.Deserialize<List<(double lat, double lng)>>(RotaJson);
+                try
+                {
+                    return JsonSerializer.Deserialize<List<(double lat, double lng)>>(RotaJson);
+                }
+                catch
+                {
+                    return new List<(double lat, double lng)>();
+                }
             }
             set
             {
                 RotaJson = JsonSerializer.Serialize(value);
+            }
+        }
+
+        [Ignore]
+        public List<TimeSpan> TemposPorKm
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(TemposPorKmJson))
+                    return new List<TimeSpan>();
+                try
+                {
+                    return JsonSerializer.Deserialize<List<TimeSpan>>(TemposPorKmJson);
+                }
+                catch
+                {
+                    return new List<TimeSpan>();
+                }
+            }
+            set
+            {
+                TemposPorKmJson = JsonSerializer.Serialize(value);
             }
         }
 

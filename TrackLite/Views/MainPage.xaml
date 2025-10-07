@@ -6,12 +6,10 @@
 
     <Grid>
 
-        <!-- WebView do mapa -->
         <WebView x:Name="MapWebView"
                  HorizontalOptions="FillAndExpand"
                  VerticalOptions="FillAndExpand"/>
 
-        <!-- Frame branco com informações e botões -->
         <Border StrokeThickness="0"
                 BackgroundColor="#FCFCFC"
                 StrokeShape="RoundRectangle 20"
@@ -28,7 +26,6 @@
 
             <Grid RowDefinitions="Auto,Auto,Auto" Padding="15" RowSpacing="10">
 
-                <!-- Tempo -->
                 <StackLayout Grid.Row="0"
                              HorizontalOptions="Center"
                              Spacing="0">
@@ -45,7 +42,6 @@
                            HorizontalOptions="Center"/>
                 </StackLayout>
 
-                <!-- Distância e pace -->
                 <StackLayout Grid.Row="1"
                              Orientation="Horizontal"
                              HorizontalOptions="Center"
@@ -80,7 +76,6 @@
                     </StackLayout>
                 </StackLayout>
 
-                <!-- Botões -->
                 <Grid Grid.Row="2" HorizontalOptions="Fill">
                     <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="7">
                         <Button x:Name="DeleteButton"
