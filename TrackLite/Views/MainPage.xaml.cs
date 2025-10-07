@@ -17,6 +17,7 @@ namespace TrackLite
         private readonly DatabaseService _databaseService = new DatabaseService();
         private List<(double lat, double lng)> rota = new();
         private bool isTracking = false;
+        private static bool _trackingGlobalAtivo = false;
         private System.Timers.Timer tempoTimer;
         private TimeSpan tempoDecorrido = TimeSpan.Zero;
         private double ultimaDistanciaVibrada = 0.0;
@@ -28,9 +29,8 @@ namespace TrackLite
         private const int MaxZoom = 18;
         private bool _estaRestaurandoEstado = false;
         private bool _deveContinuarTracking = false;
-
-        private int _intervaloColeta = 1000; 
-        private double _limiarAccuracy = 20.0; 
+        private int _intervaloColeta = 1000;
+        private double _limiarAccuracy = 20.0;
         private bool _vibracaoKmAtivada = true;
 
         public MainPage()
@@ -70,7 +70,8 @@ namespace TrackLite
             App.Current.PageDisappearing += OnPageDisappearing;
             Loaded += async (_, __) =>
             {
-                RestaurarEstado();
+                if (!_trackingGlobalAtivo)
+                    RestaurarEstado();
                 await mapaInicializadoTcs.Task;
             };
         }
@@ -212,18 +213,15 @@ setTimeout(function() {{
         private async Task AtualizarMapa(double lat, double lng)
         {
             if (!mapaPronto) return;
-
             if (rota.Count > 0)
             {
                 var ultimo = rota[^1];
                 double distancia = Haversine(ultimo, (lat, lng));
                 if (distancia < (_limiarAccuracy / 1000.0)) return;
             }
-
             rota.Add((lat, lng));
             string jsAtualizarUsuario = $"atualizarUsuario({lat}, {lng});";
             await MapWebView.EvaluateJavaScriptAsync(jsAtualizarUsuario);
-
             string jsAtualizarRota = "if (window.rotaLine) { window.rotaLine.setLatLngs([";
             for (int i = 0; i < rota.Count; i++)
             {
@@ -232,7 +230,6 @@ setTimeout(function() {{
             }
             jsAtualizarRota += "]); }";
             await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
-
             AtualizarDistanciaEPace();
         }
 
@@ -273,14 +270,19 @@ setTimeout(function() {{
 
         private async Task StartTracking()
         {
+            if (_trackingGlobalAtivo)
+            {
+                isTracking = true;
+                PlayPauseButton.ImageSource = "pausar.png";
+                tempoTimer.Start();
+                return;
+            }
             if (!await VerificarPermissaoLocalizacao()) return;
-
+            _trackingGlobalAtivo = true;
             DeviceDisplay.KeepScreenOn = true;
             ultimaDistanciaVibrada = 0;
-
             if (mapaPronto && rota.Count == 0)
                 try { await MapWebView.EvaluateJavaScriptAsync("limparRota();"); } catch { }
-
             isTracking = true;
             PlayPauseButton.ImageSource = "pausar.png";
             tempoTimer.Start();
@@ -291,7 +293,6 @@ setTimeout(function() {{
         {
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
-
             try
             {
                 while (!token.IsCancellationRequested)
@@ -304,7 +305,6 @@ setTimeout(function() {{
                             await AtualizarMapa(location.Latitude, location.Longitude);
                         });
                     }
-
                     await Task.Delay(_intervaloColeta, token);
                 }
             }
@@ -316,6 +316,7 @@ setTimeout(function() {{
             if (!isTracking) return;
             trackingCts?.Cancel();
             isTracking = false;
+            _trackingGlobalAtivo = false;
             PlayPauseButton.ImageSource = "playy.png";
             tempoTimer.Stop();
             DeviceDisplay.KeepScreenOn = false;
@@ -394,7 +395,6 @@ setTimeout(function() {{
         {
             if (!mapaPronto) return;
             if (!await VerificarPermissaoLocalizacao()) return;
-
             var location = await ObterLocalizacaoComAccuracy();
             if (location != null)
             {
@@ -408,13 +408,11 @@ setTimeout(function() {{
             double distancia = CalcularDistanciaTotal();
             double distanciaKm = distancia / 1000.0;
             DistanciaLabel.Text = $"{distanciaKm:F2} km";
-
             if (_vibracaoKmAtivada && distanciaKm - ultimaDistanciaVibrada >= 1.0)
             {
                 ultimaDistanciaVibrada = Math.Floor(distanciaKm);
                 Vibrar();
             }
-
             if (distanciaKm >= 0.05 && tempoDecorrido.TotalSeconds > 0)
             {
                 double paceSegundosPorKm = tempoDecorrido.TotalSeconds / distanciaKm;
@@ -429,7 +427,6 @@ setTimeout(function() {{
         private void Vibrar()
         {
             if (!_vibracaoKmAtivada) return;
-
             try { Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500)); }
             catch { }
         }
@@ -450,7 +447,6 @@ setTimeout(function() {{
         {
             if (!mapaPronto) await mapaInicializadoTcs.Task;
             if (!await VerificarPermissaoLocalizacao()) return;
-
             var location = await ObterLocalizacaoComAccuracy();
             if (location != null)
             {
@@ -483,9 +479,7 @@ setTimeout(function() {{
         protected override void OnAppearing()
         {
             base.OnAppearing();
-
             CarregarConfiguracoes();
-
             if (_deveContinuarTracking)
             {
                 _deveContinuarTracking = false;
@@ -528,74 +522,56 @@ setTimeout(function() {{
                             }
                             jsAtualizarRota += "]); }";
                             await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
-                            var ultimoPonto = rota[^1];
-                            await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({ultimoPonto.lat}, {ultimoPonto.lng});");
+                            var ultimo = rota[^1];
+                            await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({ultimo.lat}, {ultimo.lng});");
                         }
                         catch { }
                     }
                 }
             }
 
-            if (Preferences.ContainsKey("Tempo"))
-                tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
-            else
-                tempoDecorrido = TimeSpan.Zero;
-
-            if (Preferences.ContainsKey("UltimaDistanciaVibrada"))
-                ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
-
-            TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
+            if (Preferences.ContainsKey("Tempo")) tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
+            if (Preferences.ContainsKey("UltimaDistanciaVibrada")) ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
+            bool wasTracking = Preferences.Get("IsTracking", false);
+            TempoLabel.Text = tempoDecorrido.ToString(@"hh\\:mm\\:ss");
             AtualizarDistanciaEPace();
 
-            bool wasTracking = Preferences.Get("IsTracking", false);
-            if (wasTracking && !isTracking)
+            if (wasTracking && !_trackingGlobalAtivo)
             {
                 _deveContinuarTracking = true;
                 PlayPauseButton.ImageSource = "pausar.png";
                 isTracking = true;
+                _trackingGlobalAtivo = true;
                 tempoTimer.Start();
                 await ReiniciarTrackingAposRotacao();
+            }
+            else if (!wasTracking)
+            {
+                isTracking = false;
+                PlayPauseButton.ImageSource = "playy.png";
             }
         }
 
         private async Task ReiniciarTrackingAposRotacao()
         {
-            if (!await VerificarPermissaoLocalizacao()) return;
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
-
-            _ = Task.Run(async () =>
+            try
             {
-                try
+                while (isTracking && !token.IsCancellationRequested)
                 {
-                    while (!token.IsCancellationRequested)
+                    var location = await ObterLocalizacaoComAccuracy();
+                    if (location != null)
                     {
-                        var location = await ObterLocalizacaoComAccuracy();
-                        if (location != null)
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
                         {
-                            await MainThread.InvokeOnMainThreadAsync(async () =>
-                            {
-                                await AtualizarMapa(location.Latitude, location.Longitude);
-                            });
-                        }
-
-                        await Task.Delay(_intervaloColeta, token);
+                            await AtualizarMapa(location.Latitude, location.Longitude);
+                        });
                     }
+                    await Task.Delay(_intervaloColeta, token);
                 }
-                catch (TaskCanceledException) { }
-            }, token);
-        }
-
-        ~MainPage()
-        {
-            if (App.Current != null)
-            {
-                App.Current.PageAppearing -= OnPageAppearing;
-                App.Current.PageDisappearing -= OnPageDisappearing;
             }
-            trackingCts?.Cancel();
-            tempoTimer?.Stop();
-            tempoTimer?.Dispose();
+            catch (TaskCanceledException) { }
         }
     }
 }
