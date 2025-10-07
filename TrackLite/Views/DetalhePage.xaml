@@ -80,35 +80,58 @@
 
                 <StackLayout>
                     <Label Text="Pace por Km"
-                           FontSize="16"
+                           FontSize="18"
                            FontAttributes="Bold"
                            TextColor="Black"
-                           Margin="0,10,0,10" />
+                           Margin="0,10,0,15"
+                           HorizontalOptions="Center" />
 
                     <Frame x:Name="GraficoPaceContainer"
-                           Padding="10"
-                           BackgroundColor="#EFEFEF"
-                           CornerRadius="8"
-                           HeightRequest="300">
+                           Padding="15"
+                           BackgroundColor="White"
+                           CornerRadius="12"
+                           HasShadow="True"
+                           HeightRequest="320">
                     </Frame>
 
                     <StackLayout Orientation="Horizontal"
                                  HorizontalOptions="Center"
-                                 Spacing="15"
-                                 Margin="0,10,0,0">
-                        <StackLayout Orientation="Horizontal" Spacing="5">
-                            <BoxView Color="#21A179" WidthRequest="20" HeightRequest="20"/>
-                            <Label Text="Mais rápido" FontSize="12" VerticalTextAlignment="Center"/>
+                                 Spacing="20"
+                                 Margin="0,15,0,0">
+                        <StackLayout Orientation="Horizontal" Spacing="8">
+                            <BoxView Color="#00C853" 
+                                   WidthRequest="16" 
+                                   HeightRequest="16"
+                                   CornerRadius="8"/>
+                            <Label Text="Mais rápido" 
+                                   FontSize="11" 
+                                   FontAttributes="Bold"
+                                   VerticalTextAlignment="Center"
+                                   TextColor="#424242"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Horizontal" Spacing="5">
-                            <BoxView Color="#FF9800" WidthRequest="20" HeightRequest="20"/>
-                            <Label Text="Dentro da média" FontSize="12" VerticalTextAlignment="Center"/>
+                        <StackLayout Orientation="Horizontal" Spacing="8">
+                            <BoxView Color="#FF9800" 
+                                   WidthRequest="16" 
+                                   HeightRequest="16"
+                                   CornerRadius="8"/>
+                            <Label Text="Na média" 
+                                   FontSize="11" 
+                                   FontAttributes="Bold"
+                                   VerticalTextAlignment="Center"
+                                   TextColor="#424242"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Horizontal" Spacing="5">
-                            <BoxView Color="#F44336" WidthRequest="20" HeightRequest="20"/>
-                            <Label Text="Mais lento" FontSize="12" VerticalTextAlignment="Center"/>
+                        <StackLayout Orientation="Horizontal" Spacing="8">
+                            <BoxView Color="#FF3D00" 
+                                   WidthRequest="16" 
+                                   HeightRequest="16"
+                                   CornerRadius="8"/>
+                            <Label Text="Mais lento" 
+                                   FontSize="11" 
+                                   FontAttributes="Bold"
+                                   VerticalTextAlignment="Center"
+                                   TextColor="#424242"/>
                         </StackLayout>
                     </StackLayout>
                 </StackLayout>
@@ -122,15 +145,22 @@
                     </Grid>
                 </Frame>
 
-                <Frame CornerRadius="12" HasShadow="False" Padding="18" BorderColor="#FCFCFC">
+                <Frame CornerRadius="12" 
+                       HasShadow="True" 
+                       Padding="20" 
+                       BackgroundColor="White"
+                       BorderColor="#E0E0E0">
                     <StackLayout>
-                        <Label Text="Boa corrida!"
+                        <Label Text="{Binding MensagemMotivacional}"
                                FontSize="16"
                                FontAttributes="Bold"
-                               TextColor="Black" />
-                        <Label Text="Cada passo te levou mais longe do que ontem."
+                               TextColor="Black" 
+                               HorizontalOptions="Center"/>
+                        <Label Text="{Binding SubtituloMotivacional}"
                                FontSize="14"
-                               TextColor="#848484" />
+                               TextColor="#666666"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center"/>
                     </StackLayout>
                 </Frame>
 

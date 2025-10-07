@@ -1,4 +1,4 @@
-using Microcharts;
+﻿using Microcharts;
 using Microcharts.Maui;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
@@ -33,6 +33,8 @@ namespace TrackLite
                 OnPropertyChanged(nameof(RitmoFormatado));
                 OnPropertyChanged(nameof(DataFormatada));
                 OnPropertyChanged(nameof(PassosEstimados));
+                OnPropertyChanged(nameof(MensagemMotivacional));
+                OnPropertyChanged(nameof(SubtituloMotivacional));
 
                 if (corridaSelecionada != null) CarregarMapa();
                 if (corridaSelecionada != null) CarregarGraficoPacePorKm();
@@ -43,6 +45,61 @@ namespace TrackLite
         public string DistanciaFormatada => CorridaSelecionada?.Distancia ?? "-";
         public string RitmoFormatado => CorridaSelecionada?.Ritmo ?? "-";
         public string DataFormatada => CorridaSelecionada?.Data.ToString("dd MMMM 'de' yyyy", new CultureInfo("pt-BR")) ?? "-";
+
+        public string MensagemMotivacional
+        {
+            get
+            {
+                var mensagens = new[]
+                {
+                    new { Titulo = "Missão cumprida! 🎯", Subtitulo = "Mais uma vitória na sua jornada." },
+                    new { Titulo = "Excelente performance! ⚡", Subtitulo = "Seu esforço está rendendo frutos." },
+                    new { Titulo = "Foco e determinação! 💪", Subtitulo = "Cada km é uma conquista." },
+                    new { Titulo = "Você foi incrível! 🌟", Subtitulo = "Sua consistência inspira." },
+                    new { Titulo = "Limites desafiados! 🚀", Subtitulo = "Você superou suas expectativas." },
+                    new { Titulo = "Energia positiva! ✨", Subtitulo = "Mais um dia se movendo com propósito." },
+                    new { Titulo = "Corredor dedicado! 🏆", Subtitulo = "Cada passada conta na sua evolução." },
+                    new { Titulo = "Fôlego de campeão! 🥇", Subtitulo = "Sua determinação faz a diferença." },
+                    new { Titulo = "Movimento constante! 🔄", Subtitulo = "A evolução acontece a cada treino." },
+                };
+
+                if (CorridaSelecionada == null)
+                    return mensagens[0].Titulo;
+
+                int seed = CorridaSelecionada.Id.GetHashCode();
+                var random = new Random(seed);
+                var mensagem = mensagens[random.Next(mensagens.Length)];
+
+                return mensagem.Titulo;
+            }
+        }
+
+        public string SubtituloMotivacional
+        {
+            get
+            {
+                var mensagens = new[]
+                {
+                    "Mais uma vitória na sua jornada.",
+                    "Seu esforço está rendendo frutos.",
+                    "Cada km é uma conquista.",
+                    "Sua consistência inspira.",
+                    "Você superou suas expectativas.",
+                    "Mais um dia se movendo com propósito.",
+                    "Cada passada conta na sua evolução.",
+                    "Sua determinação faz a diferença.",
+                    "A evolução acontece a cada treino.",
+                    "Seus limites estão cada vez mais distantes."
+                };
+
+                if (CorridaSelecionada == null)
+                    return mensagens[0];
+
+                int seed = CorridaSelecionada.Id.GetHashCode() + 1;
+                var random = new Random(seed);
+                return mensagens[random.Next(mensagens.Length)];
+            }
+        }
 
         public string PassosEstimados
         {
@@ -68,6 +125,15 @@ namespace TrackLite
         {
             InitializeComponent();
             BindingContext = this;
+        }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            if (corridaSelecionada != null)
+            {
+                CarregarGraficoPacePorKm();
+            }
         }
 
         private async void OnExportClicked(object sender, EventArgs e)
@@ -192,69 +258,84 @@ map.fitBounds(polyline.getBounds());
             double tempoTotalMin = temposPorKm.Sum(t => t.TotalMinutes);
             double paceMedio = tempoTotalMin / temposPorKm.Count;
 
+            var todosPaces = temposPorKm.Select(t => t.TotalMinutes).ToList();
+            float maxPace = (float)Math.Ceiling(todosPaces.Max() * 1.15);
+            float minPace = (float)Math.Floor(todosPaces.Min() * 0.85);
+
             for (int i = 0; i < temposPorKm.Count; i++)
             {
                 double paceMin = temposPorKm[i].TotalMinutes;
 
                 SKColor cor = paceMin <= paceMedio * 0.95
-                    ? SKColor.Parse("#21A179")
+                    ? SKColor.Parse("#00C853")
                     : paceMin <= paceMedio * 1.05
-                        ? SKColor.Parse("#FF9800") 
-                        : SKColor.Parse("#F44336");
+                        ? SKColor.Parse("#FF9800")
+                        : SKColor.Parse("#FF3D00");
 
                 string labelPace = $"{(int)Math.Floor(paceMin)}:{((int)Math.Round((paceMin % 1) * 60)):00}";
 
                 entries.Add(new ChartEntry((float)paceMin)
                 {
                     Label = $"Km {i + 1}",
-                    ValueLabel = labelPace + " min/km",
+                    ValueLabel = labelPace,
                     Color = cor
                 });
             }
 
-            AtualizarGrafico(entries);
+            AtualizarGrafico(entries, maxPace, minPace);
         }
 
         private void MostrarGraficoVazio()
         {
             var entries = new List<ChartEntry>
             {
-                new ChartEntry(0)
+                new ChartEntry(5)
                 {
                     Label = "Sem dados",
-                    ValueLabel = "Nenhum km completo",
-                    Color = SKColor.Parse("#848484")
+                    ValueLabel = "Complete pelo menos 1km",
+                    Color = SKColor.Parse("#B0BEC5")
                 }
             };
 
-            AtualizarGrafico(entries);
+            AtualizarGrafico(entries, 10, 0);
         }
 
-        private void AtualizarGrafico(List<ChartEntry> entries)
+        private void AtualizarGrafico(List<ChartEntry> entries, float? maxValue = null, float? minValue = null)
         {
             if (entries.Count == 0) return;
 
             var graficoFrame = this.FindByName<Frame>("GraficoPaceContainer");
             if (graficoFrame != null)
             {
-                graficoFrame.Content = new ChartView
+                MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    Chart = new LineChart
+                    await Task.Delay(50); 
+
+                    graficoFrame.Content = new ChartView
                     {
-                        Entries = entries,
-                        LineMode = LineMode.Spline,
-                        LineSize = 4,
-                        PointMode = PointMode.Circle,
-                        PointSize = 8,
-                        LabelTextSize = 12,
-                        ValueLabelOption = ValueLabelOption.TopOfElement,
-                        BackgroundColor = SKColors.Transparent,
-                        MaxValue = entries.Max(e => e.Value).GetValueOrDefault() * 1.1f,
-                        MinValue = entries.Min(e => e.Value).GetValueOrDefault() * 0.9f
-                    },
-                    HorizontalOptions = LayoutOptions.FillAndExpand,
-                    VerticalOptions = LayoutOptions.FillAndExpand
-                };
+                        Chart = new LineChart
+                        {
+                            Entries = entries,
+                            LineMode = LineMode.Spline,
+                            LineSize = 6,
+                            PointMode = PointMode.Circle,
+                            PointSize = 14,
+                            LabelTextSize = 11,
+                            ValueLabelTextSize = 12,
+                            ValueLabelOption = ValueLabelOption.TopOfElement,
+                            BackgroundColor = SKColors.Transparent,
+                            LabelOrientation = Orientation.Horizontal,
+                            MaxValue = maxValue ?? entries.Max(e => e.Value).GetValueOrDefault() * 1.15f,
+                            MinValue = minValue ?? entries.Min(e => e.Value).GetValueOrDefault() * 0.85f,
+
+                            AnimationProgress = 1f 
+                        },
+                        HorizontalOptions = LayoutOptions.FillAndExpand,
+                        VerticalOptions = LayoutOptions.FillAndExpand
+                    };
+
+                    graficoFrame.ForceLayout();
+                });
             }
         }
     }
