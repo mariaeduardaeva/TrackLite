@@ -267,10 +267,10 @@ map.fitBounds(polyline.getBounds());
                 double paceMin = temposPorKm[i].TotalMinutes;
 
                 SKColor cor = paceMin <= paceMedio * 0.95
-                    ? SKColor.Parse("#00C853")   // verde = mais rápido
+                    ? SKColor.Parse("#00C853")
                     : paceMin <= paceMedio * 1.05
-                        ? SKColor.Parse("#FF9800") // laranja = na média
-                        : SKColor.Parse("#FF3D00"); // vermelho = mais lento
+                        ? SKColor.Parse("#FF9800")
+                        : SKColor.Parse("#FF3D00");
 
                 entries.Add(new ChartEntry((float)paceMin)
                 {

@@ -9,9 +9,7 @@
                         IsGrouped="True"
                         SelectionMode="None"
                         Margin="15,10,15,70">
-            <!-- Aumentei a margem inferior para 70 -->
 
-            <!-- O resto do código do CollectionView permanece igual -->
             <CollectionView.GroupHeaderTemplate>
                 <DataTemplate>
                     <Label Text="{Binding DataChave}" 
@@ -118,7 +116,6 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Botão de lixeira no rodapé -->
         <Button Text="Lixo"
                 ImageSource="lixo_p.png"
                 Clicked="OnLixoClicked"

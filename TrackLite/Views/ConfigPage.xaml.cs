@@ -17,12 +17,10 @@ namespace TrackLite
         {
             try
             {
-                // Força a leitura das preferências
                 var frequencia = AppSettings.FrequenciaColeta;
                 var accuracy = AppSettings.LimiarAccuracy;
                 var vibracao = AppSettings.VibracaoKm;
 
-                // Atualiza a UI na thread principal
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     FrequenciaColetaSlider.Value = frequencia;
@@ -37,7 +35,7 @@ namespace TrackLite
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar configurações: {ex.Message}");
-                // Fallback para valores padrão em caso de erro
+
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     CarregarConfiguracoesPadrao();

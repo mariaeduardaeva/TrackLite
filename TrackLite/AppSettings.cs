@@ -15,7 +15,7 @@ namespace TrackLite
             {
                 var value = Preferences.Get("FrequenciaColeta", DEFAULT_FREQUENCIA);
                 Console.WriteLine($"Lendo FrequenciaColeta: {value}");
-                // Garante que o valor está dentro de um range válido
+
                 return Math.Max(1, Math.Min(60, value));
             }
             set
@@ -75,7 +75,6 @@ namespace TrackLite
             };
         }
 
-        // Método para debug - verifica se todas as configurações existem
         public static void VerificarConfiguracoes()
         {
             Console.WriteLine("=== VERIFICAÇÃO DE CONFIGURAÇÕES ===");

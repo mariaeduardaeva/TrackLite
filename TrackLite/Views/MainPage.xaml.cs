@@ -63,7 +63,7 @@ namespace TrackLite
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar configurações: {ex.Message}");
-                // Valores padrão em caso de erro
+
                 _intervaloColeta = 1000;
                 _limiarAccuracy = 20.0;
                 _vibracaoKmAtivada = true;
@@ -388,9 +388,8 @@ setTimeout(function() {{
             await LimparEstadoRota();
             await CentralizarUsuario();
 
-            // Debug
             VerificarConfiguracoesAposDeletar();
-            CarregarConfiguracoes(); // Recarrega as configurações para garantir que estão atualizadas
+            CarregarConfiguracoes(); 
         }
 
         private async void SaveButton_Clicked(object sender, EventArgs e)
@@ -417,7 +416,7 @@ setTimeout(function() {{
             tempoUltimoKm = TimeSpan.Zero;
             kmAtual = 1.0;
 
-            // Remove APENAS as preferências relacionadas à rota
+
             LimparPreferenciasRota();
 
             if (mapaPronto)
@@ -434,8 +433,6 @@ setTimeout(function() {{
 
         private void LimparPreferenciasRota()
         {
-            // Remove APENAS as preferências relacionadas à rota atual
-            // NÃO remove as configurações do usuário
             if (Preferences.ContainsKey("Rota"))
                 Preferences.Remove("Rota");
             if (Preferences.ContainsKey("Tempo"))
@@ -463,12 +460,12 @@ setTimeout(function() {{
                     Distancia = $"{distanciaKm:F2} km",
                     Ritmo = PaceLabel.Text,
                     TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss"),
-                    Rota = new List<(double lat, double lng)>(rota), // Cria uma cópia
-                    TemposPorKm = new List<TimeSpan>(temposPorKm) // Cria uma cópia
+                    Rota = new List<(double lat, double lng)>(rota),
+                    TemposPorKm = new List<TimeSpan>(temposPorKm)
                 };
                 await _databaseService.SalvarCorridaAsync(corrida);
 
-                // Debug: verificar se as configurações ainda estão intactas
+
                 Console.WriteLine("=== APÓS SALVAR ROTA NO HISTÓRICO ===");
                 AppSettings.VerificarConfiguracoes();
             }
