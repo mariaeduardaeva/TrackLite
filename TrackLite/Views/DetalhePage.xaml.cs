@@ -260,25 +260,24 @@ map.fitBounds(polyline.getBounds());
 
             var todosPaces = temposPorKm.Select(t => t.TotalMinutes).ToList();
             float maxPace = (float)Math.Ceiling(todosPaces.Max() * 1.15);
-            float minPace = (float)Math.Floor(todosPaces.Min() * 0.85);
+            float minPace = (float)Math.Floor(Math.Max(0, todosPaces.Min() * 0.85));
 
             for (int i = 0; i < temposPorKm.Count; i++)
             {
                 double paceMin = temposPorKm[i].TotalMinutes;
 
                 SKColor cor = paceMin <= paceMedio * 0.95
-                    ? SKColor.Parse("#00C853")
+                    ? SKColor.Parse("#00C853")   // verde = mais rápido
                     : paceMin <= paceMedio * 1.05
-                        ? SKColor.Parse("#FF9800")
-                        : SKColor.Parse("#FF3D00");
-
-                string labelPace = $"{(int)Math.Floor(paceMin)}:{((int)Math.Round((paceMin % 1) * 60)):00}";
+                        ? SKColor.Parse("#FF9800") // laranja = na média
+                        : SKColor.Parse("#FF3D00"); // vermelho = mais lento
 
                 entries.Add(new ChartEntry((float)paceMin)
                 {
                     Label = $"Km {i + 1}",
-                    ValueLabel = labelPace,
-                    Color = cor
+                    ValueLabel = "",
+                    Color = cor,
+                    TextColor = cor
                 });
             }
 
@@ -293,7 +292,8 @@ map.fitBounds(polyline.getBounds());
                 {
                     Label = "Sem dados",
                     ValueLabel = "Complete pelo menos 1km",
-                    Color = SKColor.Parse("#B0BEC5")
+                    Color = SKColor.Parse("#B0BEC5"),
+                    TextColor = SKColor.Parse("#B0BEC5")
                 }
             };
 
@@ -309,27 +309,29 @@ map.fitBounds(polyline.getBounds());
             {
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    await Task.Delay(50); 
+                    await Task.Delay(50);
+
+                    var chart = new LineChart
+                    {
+                        Entries = entries,
+                        LineMode = LineMode.Spline,
+                        LineSize = 6,
+                        PointMode = PointMode.Circle,
+                        PointSize = 14,
+                        LabelOrientation = Orientation.Vertical,
+                        LabelTextSize = 22,
+                        ValueLabelTextSize = 0,
+                        ValueLabelOption = ValueLabelOption.None,
+                        Margin = 50,
+                        BackgroundColor = SKColors.Transparent,
+                        MaxValue = maxValue ?? entries.Max(e => e.Value).GetValueOrDefault() * 1.15f,
+                        MinValue = minValue ?? entries.Min(e => e.Value).GetValueOrDefault() * 0.85f,
+                        AnimationProgress = 1f
+                    };
 
                     graficoFrame.Content = new ChartView
                     {
-                        Chart = new LineChart
-                        {
-                            Entries = entries,
-                            LineMode = LineMode.Spline,
-                            LineSize = 6,
-                            PointMode = PointMode.Circle,
-                            PointSize = 14,
-                            LabelTextSize = 11,
-                            ValueLabelTextSize = 12,
-                            ValueLabelOption = ValueLabelOption.TopOfElement,
-                            BackgroundColor = SKColors.Transparent,
-                            LabelOrientation = Orientation.Horizontal,
-                            MaxValue = maxValue ?? entries.Max(e => e.Value).GetValueOrDefault() * 1.15f,
-                            MinValue = minValue ?? entries.Min(e => e.Value).GetValueOrDefault() * 0.85f,
-
-                            AnimationProgress = 1f 
-                        },
+                        Chart = chart,
                         HorizontalOptions = LayoutOptions.FillAndExpand,
                         VerticalOptions = LayoutOptions.FillAndExpand
                     };
