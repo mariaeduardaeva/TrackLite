@@ -48,9 +48,26 @@ namespace TrackLite
 
         private void CarregarConfiguracoes()
         {
-            _intervaloColeta = AppSettings.FrequenciaColeta * 1000;
-            _limiarAccuracy = AppSettings.GetAccuracyInMeters();
-            _vibracaoKmAtivada = AppSettings.VibracaoKm;
+            try
+            {
+                _intervaloColeta = AppSettings.FrequenciaColeta * 1000;
+                _limiarAccuracy = AppSettings.GetAccuracyInMeters();
+                _vibracaoKmAtivada = AppSettings.VibracaoKm;
+
+                Console.WriteLine("=== CONFIGURAÇÕES CARREGADAS ===");
+                Console.WriteLine($"Frequencia: {AppSettings.FrequenciaColeta}s -> {_intervaloColeta}ms");
+                Console.WriteLine($"Accuracy: {AppSettings.LimiarAccuracy} -> {_limiarAccuracy}m");
+                Console.WriteLine($"Vibração: {_vibracaoKmAtivada}");
+                Console.WriteLine("================================");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao carregar configurações: {ex.Message}");
+                // Valores padrão em caso de erro
+                _intervaloColeta = 1000;
+                _limiarAccuracy = 20.0;
+                _vibracaoKmAtivada = true;
+            }
         }
 
         private void InicializarTimer()
@@ -368,22 +385,27 @@ setTimeout(function() {{
         private async void DeletarRota_Clicked(object sender, EventArgs e)
         {
             StopTracking();
-            await LimparEstado();
+            await LimparEstadoRota();
             await CentralizarUsuario();
+
+            // Debug
+            VerificarConfiguracoesAposDeletar();
+            CarregarConfiguracoes(); // Recarrega as configurações para garantir que estão atualizadas
         }
 
         private async void SaveButton_Clicked(object sender, EventArgs e)
         {
             StopTracking();
             SalvarRotaNoHistorico();
-            await LimparEstado();
+            await LimparEstadoRota();
             await Shell.Current.GoToAsync("//HistoricoPage");
         }
 
-        private async Task LimparEstado()
+        private async Task LimparEstadoRota()
         {
             (double lat, double lng)? ultimoPonto = null;
             if (rota.Count > 0) ultimoPonto = rota[^1];
+
             rota.Clear();
             tempoDecorrido = TimeSpan.Zero;
             TempoLabel.Text = "00:00:00";
@@ -395,7 +417,9 @@ setTimeout(function() {{
             tempoUltimoKm = TimeSpan.Zero;
             kmAtual = 1.0;
 
-            Preferences.Clear();
+            // Remove APENAS as preferências relacionadas à rota
+            LimparPreferenciasRota();
+
             if (mapaPronto)
             {
                 try
@@ -408,19 +432,50 @@ setTimeout(function() {{
             }
         }
 
+        private void LimparPreferenciasRota()
+        {
+            // Remove APENAS as preferências relacionadas à rota atual
+            // NÃO remove as configurações do usuário
+            if (Preferences.ContainsKey("Rota"))
+                Preferences.Remove("Rota");
+            if (Preferences.ContainsKey("Tempo"))
+                Preferences.Remove("Tempo");
+            if (Preferences.ContainsKey("IsTracking"))
+                Preferences.Remove("IsTracking");
+            if (Preferences.ContainsKey("UltimaDistanciaVibrada"))
+                Preferences.Remove("UltimaDistanciaVibrada");
+            if (Preferences.ContainsKey("TemposPorKm"))
+                Preferences.Remove("TemposPorKm");
+            if (Preferences.ContainsKey("KmAtual"))
+                Preferences.Remove("KmAtual");
+            if (Preferences.ContainsKey("TempoUltimoKm"))
+                Preferences.Remove("TempoUltimoKm");
+        }
+
         private async void SalvarRotaNoHistorico()
         {
-            double distanciaKm = rota.Count >= 2 ? CalcularDistanciaTotal() / 1000.0 : 0;
-            var corrida = new Corrida
+            try
             {
-                Data = DateTime.Now,
-                Distancia = $"{distanciaKm:F2} km",
-                Ritmo = PaceLabel.Text,
-                TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss"),
-                Rota = rota,
-                TemposPorKm = new List<TimeSpan>(temposPorKm)
-            };
-            await _databaseService.SalvarCorridaAsync(corrida);
+                double distanciaKm = rota.Count >= 2 ? CalcularDistanciaTotal() / 1000.0 : 0;
+                var corrida = new Corrida
+                {
+                    Data = DateTime.Now,
+                    Distancia = $"{distanciaKm:F2} km",
+                    Ritmo = PaceLabel.Text,
+                    TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss"),
+                    Rota = new List<(double lat, double lng)>(rota), // Cria uma cópia
+                    TemposPorKm = new List<TimeSpan>(temposPorKm) // Cria uma cópia
+                };
+                await _databaseService.SalvarCorridaAsync(corrida);
+
+                // Debug: verificar se as configurações ainda estão intactas
+                Console.WriteLine("=== APÓS SALVAR ROTA NO HISTÓRICO ===");
+                AppSettings.VerificarConfiguracoes();
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Erro", $"Não foi possível salvar a rota: {ex.Message}", "OK");
+            }
         }
 
         private double CalcularDistanciaTotal()
@@ -647,6 +702,18 @@ setTimeout(function() {{
                 }
             }
             catch (TaskCanceledException) { }
+        }
+
+        private void VerificarConfiguracoesAposDeletar()
+        {
+            Console.WriteLine("=== CONFIGURAÇÕES APÓS DELETAR ROTA ===");
+            Console.WriteLine($"FrequenciaColeta: {AppSettings.FrequenciaColeta}");
+            Console.WriteLine($"LimiarAccuracy: {AppSettings.LimiarAccuracy}");
+            Console.WriteLine($"VibracaoKm: {AppSettings.VibracaoKm}");
+            Console.WriteLine($"Intervalo Coleta: {_intervaloColeta}ms");
+            Console.WriteLine($"Limiar Accuracy: {_limiarAccuracy}m");
+            Console.WriteLine($"Vibração Ativada: {_vibracaoKmAtivada}");
+            Console.WriteLine("=======================================");
         }
     }
 }

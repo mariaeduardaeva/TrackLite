@@ -9,18 +9,51 @@ namespace TrackLite
         public ConfigPage()
         {
             InitializeComponent();
+            NavigationPage.SetHasNavigationBar(this, false);
             CarregarConfiguracoes();
         }
 
         private void CarregarConfiguracoes()
         {
-            FrequenciaColetaSlider.Value = AppSettings.FrequenciaColeta;
-            AccuracySlider.Value = AppSettings.LimiarAccuracy;
-            VibracaoSwitch.IsToggled = AppSettings.VibracaoKm;
+            try
+            {
+                // Força a leitura das preferências
+                var frequencia = AppSettings.FrequenciaColeta;
+                var accuracy = AppSettings.LimiarAccuracy;
+                var vibracao = AppSettings.VibracaoKm;
 
-            AtualizarLabelFrequencia((int)FrequenciaColetaSlider.Value);
-            AtualizarLabelAccuracy((int)AccuracySlider.Value);
-            AtualizarLabelVibracao(VibracaoSwitch.IsToggled);
+                // Atualiza a UI na thread principal
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    FrequenciaColetaSlider.Value = frequencia;
+                    AccuracySlider.Value = accuracy;
+                    VibracaoSwitch.IsToggled = vibracao;
+
+                    AtualizarLabelFrequencia(frequencia);
+                    AtualizarLabelAccuracy(accuracy);
+                    AtualizarLabelVibracao(vibracao);
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao carregar configurações: {ex.Message}");
+                // Fallback para valores padrão em caso de erro
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    CarregarConfiguracoesPadrao();
+                });
+            }
+        }
+
+        private void CarregarConfiguracoesPadrao()
+        {
+            FrequenciaColetaSlider.Value = 1;
+            AccuracySlider.Value = 50;
+            VibracaoSwitch.IsToggled = true;
+
+            AtualizarLabelFrequencia(1);
+            AtualizarLabelAccuracy(50);
+            AtualizarLabelVibracao(true);
         }
 
         private void FrequenciaColetaSlider_ValueChanged(object sender, ValueChangedEventArgs e)
@@ -43,6 +76,7 @@ namespace TrackLite
             int valor = (int)Math.Round(e.NewValue);
             AtualizarLabelAccuracy(valor);
 
+            AccuracySlider.Value = valor;
             AppSettings.LimiarAccuracy = valor;
         }
 
@@ -53,7 +87,7 @@ namespace TrackLite
             if (valor <= 33)
                 textoAccuracy = "Baixa";
             else if (valor <= 66)
-                textoAccuracy = "Media"; 
+                textoAccuracy = "Media";
             else
                 textoAccuracy = "Alta";
 
@@ -63,7 +97,6 @@ namespace TrackLite
         private void VibracaoSwitch_Toggled(object sender, ToggledEventArgs e)
         {
             AtualizarLabelVibracao(e.Value);
-
             AppSettings.VibracaoKm = e.Value;
         }
 
@@ -113,8 +146,17 @@ namespace TrackLite
         protected override void OnAppearing()
         {
             base.OnAppearing();
-
+            Console.WriteLine("ConfigPage aparecendo - carregando configurações");
             CarregarConfiguracoes();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            Console.WriteLine("ConfigPage desaparecendo - verificando configurações:");
+            Console.WriteLine($"Frequencia: {AppSettings.FrequenciaColeta}");
+            Console.WriteLine($"Accuracy: {AppSettings.LimiarAccuracy}");
+            Console.WriteLine($"Vibracao: {AppSettings.VibracaoKm}");
         }
     }
 }

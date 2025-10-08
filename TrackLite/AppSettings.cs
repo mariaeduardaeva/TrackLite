@@ -5,31 +5,63 @@ namespace TrackLite
 {
     public static class AppSettings
     {
+        private const int DEFAULT_FREQUENCIA = 1;
+        private const int DEFAULT_ACCURACY = 50;
+        private const bool DEFAULT_VIBRACAO = true;
+
         public static int FrequenciaColeta
         {
-            get => Preferences.Get("FrequenciaColeta", 1); 
-            set => Preferences.Set("FrequenciaColeta", value);
+            get
+            {
+                var value = Preferences.Get("FrequenciaColeta", DEFAULT_FREQUENCIA);
+                Console.WriteLine($"Lendo FrequenciaColeta: {value}");
+                // Garante que o valor está dentro de um range válido
+                return Math.Max(1, Math.Min(60, value));
+            }
+            set
+            {
+                Console.WriteLine($"Salvando FrequenciaColeta: {value}");
+                Preferences.Set("FrequenciaColeta", value);
+            }
         }
 
         public static int LimiarAccuracy
         {
-            get => Preferences.Get("LimiarAccuracy", 50);
-            set => Preferences.Set("LimiarAccuracy", value);
+            get
+            {
+                var value = Preferences.Get("LimiarAccuracy", DEFAULT_ACCURACY);
+                Console.WriteLine($"Lendo LimiarAccuracy: {value}");
+                return Math.Max(1, Math.Min(100, value));
+            }
+            set
+            {
+                Console.WriteLine($"Salvando LimiarAccuracy: {value}");
+                Preferences.Set("LimiarAccuracy", value);
+            }
         }
 
         public static bool VibracaoKm
         {
-            get => Preferences.Get("VibracaoKm", true); 
-            set => Preferences.Set("VibracaoKm", value);
+            get
+            {
+                var value = Preferences.Get("VibracaoKm", DEFAULT_VIBRACAO);
+                Console.WriteLine($"Lendo VibracaoKm: {value}");
+                return value;
+            }
+            set
+            {
+                Console.WriteLine($"Salvando VibracaoKm: {value}");
+                Preferences.Set("VibracaoKm", value);
+            }
         }
 
         public static double GetAccuracyInMeters()
         {
             return LimiarAccuracy switch
             {
-                <= 33 => 50.0, 
-                <= 66 => 20.0,   
-                _ => 5.0         
+                <= 33 => 50.0,
+                <= 66 => 20.0,
+                _ => 5.0
             };
         }
 
@@ -41,6 +73,19 @@ namespace TrackLite
                 <= 66 => GeolocationAccuracy.Medium,
                 _ => GeolocationAccuracy.High
             };
+        }
+
+        // Método para debug - verifica se todas as configurações existem
+        public static void VerificarConfiguracoes()
+        {
+            Console.WriteLine("=== VERIFICAÇÃO DE CONFIGURAÇÕES ===");
+            Console.WriteLine($"FrequenciaColeta existe: {Preferences.ContainsKey("FrequenciaColeta")}");
+            Console.WriteLine($"LimiarAccuracy existe: {Preferences.ContainsKey("LimiarAccuracy")}");
+            Console.WriteLine($"VibracaoKm existe: {Preferences.ContainsKey("VibracaoKm")}");
+            Console.WriteLine($"FrequenciaColeta: {FrequenciaColeta}");
+            Console.WriteLine($"LimiarAccuracy: {LimiarAccuracy}");
+            Console.WriteLine($"VibracaoKm: {VibracaoKm}");
+            Console.WriteLine("=====================================");
         }
     }
 }

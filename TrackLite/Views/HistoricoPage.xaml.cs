@@ -19,6 +19,7 @@ public partial class HistoricoPage : ContentPage
     public HistoricoPage()
     {
         InitializeComponent();
+        NavigationPage.SetHasNavigationBar(this, false);
 
         _databaseService = new DatabaseService();
 

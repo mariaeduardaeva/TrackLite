@@ -1,126 +1,133 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrackLite.HistoricoPage"
-             BackgroundColor="#F2F2F2"
-             Title="Histórico">
+             BackgroundColor="#F2F2F2">
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Lixo"
-                     IconImageSource="lixo_p.png"
-                     Order="Primary"
-                     Priority="0"
-                     Clicked="OnLixoClicked" />
-    </ContentPage.ToolbarItems>
+    <Grid RowDefinitions="*,Auto">
+        <CollectionView x:Name="CorridasCollectionView"
+                        ItemsSource="{Binding CorridasAgrupadas}"
+                        IsGrouped="True"
+                        SelectionMode="None"
+                        Margin="15,10,15,70">
+            <!-- Aumentei a margem inferior para 70 -->
 
-    <CollectionView x:Name="CorridasCollectionView"
-                    ItemsSource="{Binding CorridasAgrupadas}"
-                    IsGrouped="True"
-                    SelectionMode="None"
-                    Margin="15,10">
+            <!-- O resto do código do CollectionView permanece igual -->
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate>
+                    <Label Text="{Binding DataChave}" 
+                           FontSize="14"
+                           TextColor="#848484"
+                           Margin="0,15,0,5"/>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
 
-        <CollectionView.GroupHeaderTemplate>
-            <DataTemplate>
-                <Label Text="{Binding DataChave}" 
-                       FontSize="14"
-                       TextColor="#848484"
-                       Margin="0,15,0,5"/>
-            </DataTemplate>
-        </CollectionView.GroupHeaderTemplate>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItemView Invoked="OnSwipeItemInvoked">
+                                    <Frame CornerRadius="17"
+                                           BackgroundColor="red"
+                                           Padding="10"
+                                           Margin="5"
+                                           HasShadow="False">
+                                        <StackLayout Orientation="Horizontal"
+                                                     VerticalOptions="Center"
+                                                     HorizontalOptions="Center">
+                                            <Image Source="lixo.png"
+                                                   WidthRequest="20"
+                                                   HeightRequest="20"/>
+                                            <Label Text="Excluir"
+                                                   TextColor="White"
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center"
+                                                   Margin="5,0,0,0"/>
+                                        </StackLayout>
+                                    </Frame>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
 
-        <CollectionView.ItemTemplate>
-            <DataTemplate>
-                <SwipeView>
-                    <SwipeView.RightItems>
-                        <SwipeItems Mode="Execute">
-                            <SwipeItemView Invoked="OnSwipeItemInvoked">
-                                <Frame CornerRadius="17"
-                                       BackgroundColor="red"
-                                       Padding="10"
-                                       Margin="5"
-                                       HasShadow="False">
-                                    <StackLayout Orientation="Horizontal"
-                                                 VerticalOptions="Center"
-                                                 HorizontalOptions="Center">
-                                        <Image Source="lixo.png"
-                                               WidthRequest="20"
-                                               HeightRequest="20"/>
-                                        <Label Text="Excluir"
-                                               TextColor="White"
-                                               FontAttributes="Bold"
-                                               VerticalOptions="Center"
-                                               Margin="5,0,0,0"/>
-                                    </StackLayout>
-                                </Frame>
-                            </SwipeItemView>
-                        </SwipeItems>
-                    </SwipeView.RightItems>
+                        <Frame BackgroundColor="#FCFCFC"
+                               CornerRadius="15"
+                               HasShadow="False"
+                               Padding="10"
+                               Margin="0,5">
 
-                    <Frame BackgroundColor="#FCFCFC"
-                           CornerRadius="15"
-                           HasShadow="False"
-                           Padding="10"
-                           Margin="0,5">
+                            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" 
+                                  RowDefinitions="Auto,Auto" 
+                                  VerticalOptions="Center" 
+                                  ColumnSpacing="10"
+                                  Padding="5">
+                                <Image Source="objective.png" 
+                                       Grid.RowSpan="2" 
+                                       Grid.Column="0"
+                                       WidthRequest="21" 
+                                       HeightRequest="21"
+                                       VerticalOptions="Center"/>
 
-                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" 
-                              RowDefinitions="Auto,Auto" 
-                              VerticalOptions="Center" 
-                              ColumnSpacing="10"
-                              Padding="5">
-                            <Image Source="objective.png" 
-                                   Grid.RowSpan="2" 
-                                   Grid.Column="0"
-                                   WidthRequest="21" 
-                                   HeightRequest="21"
-                                   VerticalOptions="Center"/>
+                                <Label Text="Distância" 
+                                       Grid.Row="0" 
+                                       Grid.Column="1"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#214F4B"/>
+                                <Label Text="Pace" Grid.Row="0" 
+                                       Grid.Column="2"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#214F4B"/>
 
-                            <Label Text="Distância" 
-                                   Grid.Row="0" 
-                                   Grid.Column="1"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#214F4B"/>
-                            <Label Text="Pace" Grid.Row="0" 
-                                   Grid.Column="2"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#214F4B"/>
+                                <Label Text="{Binding Distancia}" 
+                                       Grid.Row="1" 
+                                       Grid.Column="1"
+                                       FontSize="16"
+                                       TextColor="black"/>
+                                <Label Text="{Binding Ritmo}" 
+                                       Grid.Row="1" 
+                                       Grid.Column="2"
+                                       FontSize="16"
+                                       TextColor="black"/>
 
-                            <Label Text="{Binding Distancia}" 
-                                   Grid.Row="1" 
-                                   Grid.Column="1"
-                                   FontSize="16"
-                                   TextColor="black"/>
-                            <Label Text="{Binding Ritmo}" 
-                                   Grid.Row="1" 
-                                   Grid.Column="2"
-                                   FontSize="16"
-                                   TextColor="black"/>
+                                <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
+                                       Grid.RowSpan="2" 
+                                       Grid.Column="3"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#214F4B"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="End"/>
 
-                            <Label Text="{Binding Data, StringFormat='{0:HH:mm}'}" 
-                                   Grid.RowSpan="2" 
-                                   Grid.Column="3"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#214F4B"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="End"/>
+                                <Image Source="clock.png" 
+                                       Grid.RowSpan="2" 
+                                       Grid.Column="4"
+                                       WidthRequest="21" 
+                                       HeightRequest="21"
+                                       VerticalOptions="Center"/>
+                            </Grid>
 
-                            <Image Source="clock.png" 
-                                   Grid.RowSpan="2" 
-                                   Grid.Column="4"
-                                   WidthRequest="21" 
-                                   HeightRequest="21"
-                                   VerticalOptions="Center"/>
-                        </Grid>
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={x:Reference CorridasCollectionView}, Path=BindingContext.ItemTappedCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer 
-                                Command="{Binding Source={x:Reference CorridasCollectionView}, Path=BindingContext.ItemTappedCommand}"
-                                CommandParameter="{Binding .}" />
-                        </Frame.GestureRecognizers>
-                    </Frame>
-                </SwipeView>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-    </CollectionView>
+        <!-- Botão de lixeira no rodapé -->
+        <Button Text="Lixo"
+                ImageSource="lixo_p.png"
+                Clicked="OnLixoClicked"
+                BackgroundColor="#214F4B"
+                TextColor="White"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                Margin="20,10,20,20"
+                HeightRequest="50"
+                Grid.Row="1"/>
+    </Grid>
 </ContentPage>

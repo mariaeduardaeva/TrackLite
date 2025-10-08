@@ -71,6 +71,7 @@
 	<ItemGroup>
 	  <None Remove="Resources\Images\back.png.png" />
 	  <None Remove="Resources\Images\download.png.png" />
+	  <None Remove="Resources\Images\lixo_p.png" />
 	</ItemGroup>
 
 	<ItemGroup>
