@@ -32,6 +32,7 @@ namespace TrackLite
         private int _intervaloColeta = 1000;
         private double _limiarAccuracy = 20.0;
         private bool _vibracaoKmAtivada = true;
+        private Ponto ultimoPontoAdicionado = null;
 
         private List<TimeSpan> temposPorKm = new List<TimeSpan>();
         private double kmAtual = 1.0;
@@ -253,26 +254,37 @@ setTimeout(function() {{
         {
             if (!mapaPronto) return;
 
-            if (rota.Count > 0)
+            var novoPonto = new Ponto
             {
-                var ultimo = rota[^1];
-                double distancia = Haversine(ultimo, new Ponto { lat = lat, lng = lng });
+                lat = lat,
+                lng = lng,
+                accuracy = _limiarAccuracy,
+                timestamp = DateTime.Now
+            };
+
+            if (ultimoPontoAdicionado != null)
+            {
+                double distancia = Haversine(ultimoPontoAdicionado, novoPonto);
                 if (distancia < (_limiarAccuracy / 1000.0)) return;
             }
 
-            rota.Add(new Ponto { lat = lat, lng = lng, accuracy = _limiarAccuracy, timestamp = DateTime.Now });
+            rota.Add(novoPonto);
+            ultimoPontoAdicionado = novoPonto;
 
             string jsAtualizarUsuario = $"atualizarUsuario({lat}, {lng});";
             await MapWebView.EvaluateJavaScriptAsync(jsAtualizarUsuario);
 
-            string jsAtualizarRota = "if (window.rotaLine) { window.rotaLine.setLatLngs([";
-            for (int i = 0; i < rota.Count; i++)
+            if (rota.Count > 0)
             {
-                jsAtualizarRota += $"[{rota[i].lat},{rota[i].lng}]";
-                if (i < rota.Count - 1) jsAtualizarRota += ",";
+                string jsAtualizarRota = "if (window.rotaLine) { window.rotaLine.setLatLngs([";
+                for (int i = 0; i < rota.Count; i++)
+                {
+                    jsAtualizarRota += $"[{rota[i].lat},{rota[i].lng}]";
+                    if (i < rota.Count - 1) jsAtualizarRota += ",";
+                }
+                jsAtualizarRota += "]); }";
+                await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
             }
-            jsAtualizarRota += "]); }";
-            await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
 
             AtualizarDistanciaEPace();
         }
@@ -347,11 +359,11 @@ setTimeout(function() {{
                             double distancia = Haversine(ultimoPonto, new Ponto { lat = location.Latitude, lng = location.Longitude });
                             double tempoSegundos = (DateTime.Now - ultimoPonto.timestamp).TotalSeconds;
                             if (tempoSegundos > 0)
-                                velocidade = distancia / tempoSegundos; 
+                                velocidade = distancia / tempoSegundos;
                         }
 
                         bool pontoValido =
-                            accuracy <= 50 && 
+                            accuracy <= 50 &&
                             (velocidade == 0 || velocidade <= 7);
 
                         if (pontoValido)
@@ -615,10 +627,20 @@ setTimeout(function() {{
             {
                 var json = Preferences.Get("Rota", "");
                 var pontos = JsonSerializer.Deserialize<List<Ponto>>(json);
-                if (pontos != null) rota.AddRange(pontos);
+                if (pontos != null)
+                {
+                    rota.Clear();
+                    rota.AddRange(pontos);
+                    if (rota.Count > 0)
+                        ultimoPontoAdicionado = rota[^1];
+                }
             }
-            if (Preferences.ContainsKey("Tempo")) tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
-            if (Preferences.ContainsKey("UltimaDistanciaVibrada")) ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
+
+            if (Preferences.ContainsKey("Tempo"))
+                tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
+
+            if (Preferences.ContainsKey("UltimaDistanciaVibrada"))
+                ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
 
             if (Preferences.ContainsKey("TemposPorKm"))
             {
@@ -640,79 +662,53 @@ setTimeout(function() {{
 
             TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
             AtualizarDistanciaEPace();
+
             isTracking = false;
             PlayPauseButton.ImageSource = "playy.png";
         }
 
+
         private async Task RestaurarEstadoAposRotacao()
         {
-            if (Preferences.ContainsKey("Rota"))
-            {
-                var json = Preferences.Get("Rota", "");
-                var pontos = JsonSerializer.Deserialize<List<Ponto>>(json);
-                if (pontos != null && pontos.Count > 0)
-                {
-                    rota.Clear();
-                    rota.AddRange(pontos);
-                    if (mapaPronto)
-                    {
-                        try
-                        {
-                            await MapWebView.EvaluateJavaScriptAsync("limparRota();");
-                            string jsAtualizarRota = "if (window.rotaLine) { window.rotaLine.setLatLngs([";
-                            for (int i = 0; i < rota.Count; i++)
-                            {
-                                jsAtualizarRota += $"[{rota[i].lat},{rota[i].lng}]";
-                                if (i < rota.Count - 1) jsAtualizarRota += ",";
-                            }
-                            jsAtualizarRota += "]); }";
-                            await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
-                            var ultimo = rota[^1];
-                            await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({ultimo.lat}, {ultimo.lng});");
-                        }
-                        catch { }
-                    }
-                }
-            }
-
-            if (Preferences.ContainsKey("Tempo")) tempoDecorrido = TimeSpan.FromTicks(Preferences.Get("Tempo", 0L));
-            if (Preferences.ContainsKey("UltimaDistanciaVibrada")) ultimaDistanciaVibrada = Preferences.Get("UltimaDistanciaVibrada", 0.0);
-
-            if (Preferences.ContainsKey("TemposPorKm"))
-            {
-                var jsonTempos = Preferences.Get("TemposPorKm", "");
-                if (!string.IsNullOrEmpty(jsonTempos))
-                {
-                    var tempos = JsonSerializer.Deserialize<List<long>>(jsonTempos);
-                    if (tempos != null)
-                    {
-                        temposPorKm.Clear();
-                        foreach (var ticks in tempos)
-                            temposPorKm.Add(TimeSpan.FromTicks(ticks));
-                    }
-                }
-            }
-
-            kmAtual = Preferences.Get("KmAtual", 1.0);
-            tempoUltimoKm = TimeSpan.FromTicks(Preferences.Get("TempoUltimoKm", 0L));
+            RestaurarEstado();
 
             bool wasTracking = Preferences.Get("IsTracking", false);
-            TempoLabel.Text = tempoDecorrido.ToString(@"hh\:mm\:ss");
-            AtualizarDistanciaEPace();
 
             if (wasTracking && !_trackingGlobalAtivo)
             {
                 _deveContinuarTracking = true;
-                PlayPauseButton.ImageSource = "pausar.png";
-                isTracking = true;
                 _trackingGlobalAtivo = true;
+                isTracking = true;
+                PlayPauseButton.ImageSource = "pausar.png";
                 tempoTimer.Start();
+
+                trackingCts?.Cancel();
                 await ReiniciarTrackingAposRotacao();
             }
             else if (!wasTracking)
             {
                 isTracking = false;
                 PlayPauseButton.ImageSource = "playy.png";
+            }
+
+            if (rota.Count > 0 && mapaPronto)
+            {
+                try
+                {
+                    await MapWebView.EvaluateJavaScriptAsync("limparRota();");
+                    string jsAtualizarRota = "if (window.rotaLine) { window.rotaLine.setLatLngs([";
+                    for (int i = 0; i < rota.Count; i++)
+                    {
+                        jsAtualizarRota += $"[{rota[i].lat},{rota[i].lng}]";
+                        if (i < rota.Count - 1) jsAtualizarRota += ",";
+                    }
+                    jsAtualizarRota += "]); }";
+                    await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
+
+                    var ultimo = rota[^1];
+                    await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({ultimo.lat}, {ultimo.lng});");
+                }
+                catch { }
             }
         }
 
