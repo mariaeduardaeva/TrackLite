@@ -465,24 +465,53 @@ setTimeout(function() {{
             try
             {
                 double distanciaKm = rota.Count >= 2 ? CalcularDistanciaTotal() / 1000.0 : 0;
+
                 var corrida = new Corrida
                 {
                     Data = DateTime.Now,
+                    StartTime = DateTime.Now,
                     Distancia = $"{distanciaKm:F2} km",
                     Ritmo = PaceLabel.Text,
                     TempoDecorrido = tempoDecorrido.ToString(@"hh\:mm\:ss"),
                     Rota = new List<Ponto>(rota),
-                    TemposPorKm = new List<TimeSpan>(temposPorKm)
+                    TemposPorKm = new List<TimeSpan>(temposPorKm),
+                    Title = $"Corrida {DateTime.Now:dd/MM/yyyy HH:mm}",
+                    Description = $"Distância: {distanciaKm:F2} km"
                 };
-                await _databaseService.SalvarCorridaAsync(corrida);
 
-                Console.WriteLine("=== APÓS SALVAR ROTA NO HISTÓRICO ===");
-                AppSettings.VerificarConfiguracoes();
+                var activityPoints = new List<ActivityPoint>();
+                for (int i = 0; i < rota.Count; i++)
+                {
+                    activityPoints.Add(new ActivityPoint
+                    {
+                        Latitude = rota[i].lat,
+                        Longitude = rota[i].lng,
+                        Accuracy = rota[i].accuracy,
+                        Timestamp = rota[i].timestamp,
+                        Sequence = i
+                    });
+                }
+
+                await _databaseService.SalvarCorridaComPontosAsync(corrida, activityPoints);
+
+                Console.WriteLine("=== ROTA SALVA COM PONTOS SEPARADOS (RF18) ===");
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Erro", $"Não foi possível salvar a rota: {ex.Message}", "OK");
             }
+        }
+
+        private async Task<List<Ponto>> CarregarPontosDaCorrida(int corridaId)
+        {
+            var activityPoints = await _databaseService.GetPontosPorCorridaAsync(corridaId);
+            return activityPoints.Select(p => new Ponto
+            {
+                lat = p.Latitude,
+                lng = p.Longitude,
+                accuracy = p.Accuracy,
+                timestamp = p.Timestamp
+            }).ToList();
         }
 
         private double CalcularDistanciaTotal()

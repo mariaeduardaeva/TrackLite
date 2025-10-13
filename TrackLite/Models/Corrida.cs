@@ -2,17 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TrackLite.Models
 {
-    public class Ponto
-    {
-        public double lat { get; set; }
-        public double lng { get; set; }
-        public double accuracy { get; set; } = 0;
-        public DateTime timestamp { get; set; } = DateTime.Now;
-    }
-
     public class Corrida
     {
         [PrimaryKey, AutoIncrement]
@@ -24,10 +17,16 @@ namespace TrackLite.Models
         public string TempoDecorrido { get; set; }
         public string RotaJson { get; set; }
         public string TemposPorKmJson { get; set; } = "[]";
-
         public bool Lixeira { get; set; } = false;
 
-        [Ignore]
+        public string Title { get; set; } = "Corrida";
+        public string Description { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+        [Ignore, JsonIgnore]
         public List<Ponto> Rota
         {
             get
@@ -49,7 +48,7 @@ namespace TrackLite.Models
             }
         }
 
-        [Ignore]
+        [Ignore, JsonIgnore]
         public List<TimeSpan> TemposPorKm
         {
             get
@@ -71,7 +70,7 @@ namespace TrackLite.Models
             }
         }
 
-        [Ignore]
+        [Ignore, JsonIgnore]
         public string DataFormatada => Data.ToString("dd/MM/yyyy HH:mm");
     }
 }
