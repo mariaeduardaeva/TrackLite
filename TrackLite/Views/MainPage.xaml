@@ -8,7 +8,51 @@
 
         <WebView x:Name="MapWebView"
                  HorizontalOptions="FillAndExpand"
-                 VerticalOptions="FillAndExpand"/>
+                 VerticalOptions="FillAndExpand" />
+
+        <Grid x:Name="SemSinalView"
+              BackgroundColor="#99000000"
+              IsVisible="False"
+              HorizontalOptions="FillAndExpand"
+              VerticalOptions="FillAndExpand">
+
+            <Frame BackgroundColor="White"
+                   CornerRadius="15"
+                   HasShadow="True"
+                   Padding="30"
+                   WidthRequest="280"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center">
+
+                <StackLayout Spacing="15"
+                             HorizontalOptions="Center"
+                             VerticalOptions="Center">
+
+                    <Image Source="sem_sinal.png"
+                           HeightRequest="80"
+                           WidthRequest="80"
+                           HorizontalOptions="Center" />
+
+                    <Label Text="Sem sinal de GPS"
+                           FontAttributes="Bold"
+                           FontSize="20"
+                           HorizontalOptions="Center"
+                           TextColor="#214F4B" />
+
+                    <Label Text="Aguardando sinal de localização..."
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           TextColor="Gray" />
+
+                    <ActivityIndicator IsRunning="True"
+                                       Color="#214F4B"
+                                       WidthRequest="30"
+                                       HeightRequest="30"
+                                       HorizontalOptions="Center" />
+                </StackLayout>
+
+            </Frame>
+        </Grid>
 
         <Border StrokeThickness="0"
                 BackgroundColor="#FCFCFC"
@@ -24,7 +68,9 @@
                         Radius="10"/>
             </Border.Shadow>
 
-            <Grid RowDefinitions="Auto,Auto,Auto" Padding="15" RowSpacing="10">
+            <Grid RowDefinitions="Auto,Auto,Auto"
+                  Padding="15"
+                  RowSpacing="10">
 
                 <StackLayout Grid.Row="0"
                              HorizontalOptions="Center"
@@ -41,7 +87,7 @@
                            TextColor="Black"
                            HorizontalOptions="Center"/>
                 </StackLayout>
-
+                
                 <StackLayout Grid.Row="1"
                              Orientation="Horizontal"
                              HorizontalOptions="Center"
@@ -77,7 +123,10 @@
                 </StackLayout>
 
                 <Grid Grid.Row="2" HorizontalOptions="Fill">
-                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="7">
+                    <StackLayout Orientation="Horizontal"
+                                 HorizontalOptions="Center"
+                                 Spacing="7">
+
                         <Button x:Name="DeleteButton"
                                 BackgroundColor="#214F4B"
                                 CornerRadius="20"

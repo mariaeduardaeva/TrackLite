@@ -217,10 +217,20 @@ setTimeout(function() {{
             {
                 var accuracy = AppSettings.GetGeolocationAccuracy();
                 var request = new GeolocationRequest(accuracy, TimeSpan.FromSeconds(10));
-                return await Geolocation.Default.GetLocationAsync(request);
+                var location = await Geolocation.Default.GetLocationAsync(request);
+
+                if (location == null)
+                {
+                    MostrarSemSinal();
+                    return null;
+                }
+
+                OcultarSemSinal();
+                return location;
             }
             catch
             {
+                MostrarSemSinal();
                 return null;
             }
         }
@@ -703,6 +713,33 @@ setTimeout(function() {{
             base.OnDisappearing();
             if (isTracking)
                 SalvarEstado();
+        }
+        #endregion
+
+        #region Estado Sem Sinal
+        private void MostrarSemSinal()
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                if (!SemSinalView.IsVisible)
+                {
+                    SemSinalView.Opacity = 0;
+                    SemSinalView.IsVisible = true;
+                    await SemSinalView.FadeTo(1, 300, Easing.CubicIn);
+                }
+            });
+        }
+
+        private void OcultarSemSinal()
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                if (SemSinalView.IsVisible)
+                {
+                    await SemSinalView.FadeTo(0, 300, Easing.CubicOut);
+                    SemSinalView.IsVisible = false;
+                }
+            });
         }
         #endregion
 
