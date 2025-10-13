@@ -329,6 +329,9 @@ setTimeout(function() {{
         {
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
+
+            Ponto ultimoPonto = null;
+
             try
             {
                 while (!token.IsCancellationRequested)
@@ -336,16 +339,48 @@ setTimeout(function() {{
                     var location = await ObterLocalizacaoComAccuracy();
                     if (location != null)
                     {
-                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        double accuracy = location.Accuracy ?? 9999;
+                        double velocidade = 0.0;
+
+                        if (ultimoPonto != null)
                         {
-                            await AtualizarMapa(location.Latitude, location.Longitude);
-                        });
+                            double distancia = Haversine(ultimoPonto, new Ponto { lat = location.Latitude, lng = location.Longitude });
+                            double tempoSegundos = (DateTime.Now - ultimoPonto.timestamp).TotalSeconds;
+                            if (tempoSegundos > 0)
+                                velocidade = distancia / tempoSegundos; 
+                        }
+
+                        bool pontoValido =
+                            accuracy <= 50 && 
+                            (velocidade == 0 || velocidade <= 7);
+
+                        if (pontoValido)
+                        {
+                            ultimoPonto = new Ponto
+                            {
+                                lat = location.Latitude,
+                                lng = location.Longitude,
+                                accuracy = accuracy,
+                                timestamp = DateTime.Now
+                            };
+
+                            await MainThread.InvokeOnMainThreadAsync(async () =>
+                            {
+                                await AtualizarMapa(ultimoPonto.lat, ultimoPonto.lng);
+                            });
+                        }
+                        else
+                        {
+                            Console.WriteLine($"📍 Ponto descartado: accuracy={accuracy:F1}m, velocidade={velocidade:F2}m/s");
+                        }
                     }
+
                     await Task.Delay(_intervaloColeta, token);
                 }
             }
             catch (TaskCanceledException) { }
         }
+
 
         private void StopTracking()
         {
