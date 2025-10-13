@@ -5,6 +5,14 @@ using System.Text.Json;
 
 namespace TrackLite.Models
 {
+    public class Ponto
+    {
+        public double lat { get; set; }
+        public double lng { get; set; }
+        public double accuracy { get; set; } = 0;
+        public DateTime timestamp { get; set; } = DateTime.Now;
+    }
+
     public class Corrida
     {
         [PrimaryKey, AutoIncrement]
@@ -20,19 +28,19 @@ namespace TrackLite.Models
         public bool Lixeira { get; set; } = false;
 
         [Ignore]
-        public List<(double lat, double lng)> Rota
+        public List<Ponto> Rota
         {
             get
             {
                 if (string.IsNullOrWhiteSpace(RotaJson))
-                    return new List<(double lat, double lng)>();
+                    return new List<Ponto>();
                 try
                 {
-                    return JsonSerializer.Deserialize<List<(double lat, double lng)>>(RotaJson);
+                    return JsonSerializer.Deserialize<List<Ponto>>(RotaJson) ?? new List<Ponto>();
                 }
                 catch
                 {
-                    return new List<(double lat, double lng)>();
+                    return new List<Ponto>();
                 }
             }
             set
@@ -50,7 +58,7 @@ namespace TrackLite.Models
                     return new List<TimeSpan>();
                 try
                 {
-                    return JsonSerializer.Deserialize<List<TimeSpan>>(TemposPorKmJson);
+                    return JsonSerializer.Deserialize<List<TimeSpan>>(TemposPorKmJson) ?? new List<TimeSpan>();
                 }
                 catch
                 {
