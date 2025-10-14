@@ -250,7 +250,7 @@ setTimeout(function() {{
             return true;
         }
 
-        private async Task AtualizarMapa(double lat, double lng)
+        private async Task AtualizarMapa(double lat, double lng, double accuracy)
         {
             if (!mapaPronto) return;
 
@@ -258,7 +258,7 @@ setTimeout(function() {{
             {
                 lat = lat,
                 lng = lng,
-                accuracy = _limiarAccuracy,
+                accuracy = accuracy,
                 timestamp = DateTime.Now
             };
 
@@ -289,6 +289,7 @@ setTimeout(function() {{
             AtualizarDistanciaEPace();
         }
 
+
         private async Task CentralizarUsuario()
         {
             if (!mapaPronto) await mapaInicializadoTcs.Task;
@@ -298,7 +299,8 @@ setTimeout(function() {{
             {
                 string js = $"centralizar({location.Latitude}, {location.Longitude});";
                 await MapWebView.EvaluateJavaScriptAsync(js);
-                await AtualizarMapa(location.Latitude, location.Longitude);
+                // Chamar AtualizarMapa com o accuracy real
+                await AtualizarMapa(location.Latitude, location.Longitude, location.Accuracy ?? _limiarAccuracy);
             }
         }
 
@@ -311,8 +313,11 @@ setTimeout(function() {{
             {
                 string js = $"window.map.setView([{location.Latitude}, {location.Longitude}], {ZoomInicial}, {{animate: true, duration: 1}});";
                 await MapWebView.EvaluateJavaScriptAsync(js);
+                // Atualizar o mapa com accuracy real
+                await AtualizarMapa(location.Latitude, location.Longitude, location.Accuracy ?? _limiarAccuracy);
             }
         }
+
         #endregion
 
         #region Tracking
@@ -372,13 +377,13 @@ setTimeout(function() {{
                             {
                                 lat = location.Latitude,
                                 lng = location.Longitude,
-                                accuracy = accuracy,
+                                accuracy = location.Accuracy ?? _limiarAccuracy,
                                 timestamp = DateTime.Now
                             };
 
                             await MainThread.InvokeOnMainThreadAsync(async () =>
                             {
-                                await AtualizarMapa(ultimoPonto.lat, ultimoPonto.lng);
+                                await AtualizarMapa(ultimoPonto.lat, ultimoPonto.lng, ultimoPonto.accuracy);
                             });
                         }
                         else
@@ -705,8 +710,11 @@ setTimeout(function() {{
                     jsAtualizarRota += "]); }";
                     await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
 
-                    var ultimo = rota[^1];
-                    await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({ultimo.lat}, {ultimo.lng});");
+                    // Usar a variável que já existe na classe
+                    var pontoFinal = rota[^1];
+                    await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({pontoFinal.lat}, {pontoFinal.lng});");
+
+                    // Não precisa chamar AtualizarMapa aqui pois já estamos restaurando
                 }
                 catch { }
             }
@@ -725,7 +733,8 @@ setTimeout(function() {{
                     {
                         await MainThread.InvokeOnMainThreadAsync(async () =>
                         {
-                            await AtualizarMapa(location.Latitude, location.Longitude);
+                            // Usar a localização atual do GPS, não uma variável que não existe
+                            await AtualizarMapa(location.Latitude, location.Longitude, location.Accuracy ?? _limiarAccuracy);
                         });
                     }
                     await Task.Delay(_intervaloColeta, token);
