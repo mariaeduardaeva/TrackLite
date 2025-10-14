@@ -307,7 +307,6 @@ namespace TrackLite
                         canvas = document.BeginPage(pageInfo.Width, pageInfo.Height);
                         canvas.Clear(corFundo);
 
-                        // Cabeçalho
                         canvas.DrawRect(0, 0, pageInfo.Width, 120, new SKPaint { Color = corPrimaria });
                         canvas.DrawText("Dados CSV da Corrida", pageInfo.Width / 2, 70, new SKPaint
                         {
@@ -461,8 +460,107 @@ map.fitBounds(polyline.getBounds());
 
             if (CorridaSelecionada.TemposPorKm != null && CorridaSelecionada.TemposPorKm.Count > 0)
                 CarregarGraficoComTemposReais();
+            else if (TemDistanciaParcial())
+                CarregarGraficoComParcial();
             else
                 MostrarGraficoVazio();
+        }
+
+        private bool TemDistanciaParcial()
+        {
+            if (CorridaSelecionada == null || string.IsNullOrWhiteSpace(CorridaSelecionada.Distancia))
+                return false;
+
+            if (double.TryParse(
+                CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."),
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out double km))
+            {
+                return km > 0 && (km < 1 || km % 1 != 0);
+            }
+
+            return false;
+        }
+
+        private void CarregarGraficoComParcial()
+        {
+            if (CorridaSelecionada == null) return;
+
+            var entries = new List<ChartEntry>();
+
+            double distanciaKm = ObterDistanciaEmKm();
+            if (distanciaKm <= 0) return;
+
+            double tempoMinutos = ConverterTempoParaMinutos(CorridaSelecionada.TempoDecorrido);
+            if (tempoMinutos <= 0) return;
+
+            double pace = tempoMinutos / distanciaKm;
+
+            entries.Add(new ChartEntry((float)pace)
+            {
+                Label = $"{distanciaKm:F2} km",
+                ValueLabel = "",
+                Color = SKColor.Parse("#2196F3"), 
+                TextColor = SKColor.Parse("#2196F3")
+            });
+
+            float maxPace = (float)Math.Ceiling(pace * 1.3);
+            float minPace = (float)Math.Floor(Math.Max(0, pace * 0.7));
+
+            AtualizarGrafico(entries, maxPace, minPace);
+        }
+
+        private double ObterDistanciaEmKm()
+        {
+            if (CorridaSelecionada == null || string.IsNullOrWhiteSpace(CorridaSelecionada.Distancia))
+                return 0;
+
+            if (double.TryParse(
+                CorridaSelecionada.Distancia.Replace("km", "").Trim().Replace(",", "."),
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out double km))
+            {
+                return km;
+            }
+
+            return 0;
+        }
+
+        private double ConverterTempoParaMinutos(string tempo)
+        {
+            if (string.IsNullOrWhiteSpace(tempo))
+                return 0;
+
+            try
+            {
+                var partes = tempo.Split(':');
+
+                if (partes.Length == 2)
+                {
+                    if (int.TryParse(partes[0], out int minutos) &&
+                        int.TryParse(partes[1], out int segundos))
+                    {
+                        return minutos + (segundos / 60.0);
+                    }
+                }
+                else if (partes.Length == 3) 
+                {
+                    if (int.TryParse(partes[0], out int horas) &&
+                        int.TryParse(partes[1], out int minutos) &&
+                        int.TryParse(partes[2], out int segundos))
+                    {
+                        return (horas * 60) + minutos + (segundos / 60.0);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+               
+            }
+
+            return 0;
         }
 
         private void CarregarGraficoComTemposReais()
@@ -496,23 +594,46 @@ map.fitBounds(polyline.getBounds());
                 });
             }
 
+            double distanciaTotal = ObterDistanciaEmKm();
+            if (distanciaTotal > temposPorKm.Count)
+            {
+                double distanciaParcial = distanciaTotal - temposPorKm.Count;
+                if (distanciaParcial > 0)
+                {
+                    double tempoParcialMin = tempoTotalMin / temposPorKm.Count * distanciaParcial;
+                    double paceParcial = tempoParcialMin / distanciaParcial;
+
+                    entries.Add(new ChartEntry((float)paceParcial)
+                    {
+                        Label = $"{distanciaParcial:F2} km",
+                        ValueLabel = "",
+                        Color = SKColor.Parse("#2196F3"), 
+                        TextColor = SKColor.Parse("#2196F3")
+                    });
+
+                    maxPace = (float)Math.Max(maxPace, Math.Ceiling(paceParcial * 1.15));
+                    minPace = (float)Math.Min(minPace, Math.Floor(Math.Max(0, paceParcial * 0.85)));
+                }
+            }
+
             AtualizarGrafico(entries, maxPace, minPace);
         }
 
         private void MostrarGraficoVazio()
         {
             var entries = new List<ChartEntry>
-            {
-                new ChartEntry(5)
-                {
-                    Label = "Sem dados",
-                    ValueLabel = "Complete pelo menos 1km",
-                    Color = SKColor.Parse("#B0BEC5"),
-                    TextColor = SKColor.Parse("#B0BEC5")
-                }
-            };
+    {
+        new ChartEntry(5)
+        {
+            Label = "Sem dados",
+            ValueLabel = "Complete pelo menos 100m",
+            Color = SKColor.Parse("#B0BEC5"),
+            TextColor = SKColor.Parse("#B0BEC5")
+        }
+    };
             AtualizarGrafico(entries, 10, 0);
         }
+
 
         private void AtualizarGrafico(List<ChartEntry> entries, float? maxValue = null, float? minValue = null)
         {

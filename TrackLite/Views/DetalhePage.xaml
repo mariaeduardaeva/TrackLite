@@ -33,7 +33,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Frame CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
+                    <Frame CornerRadius="12" HasShadow="False" Padding="10" BackgroundColor="White">
                         <HorizontalStackLayout HorizontalOptions="Center">
                             <Image Source="clock.png" WidthRequest="20" HeightRequest="20" />
                             <Label Text="{Binding TempoFormatado}"
@@ -44,7 +44,7 @@
                         </HorizontalStackLayout>
                     </Frame>
 
-                    <Frame Grid.Column="1" CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
+                    <Frame Grid.Column="1" CornerRadius="12" HasShadow="False" Padding="10" BackgroundColor="White">
                         <HorizontalStackLayout HorizontalOptions="Center">
                             <Image Source="distancia.png" WidthRequest="20" HeightRequest="20" />
                             <Label Text="{Binding DistanciaFormatada}"
@@ -55,7 +55,7 @@
                         </HorizontalStackLayout>
                     </Frame>
 
-                    <Frame Grid.Row="1" CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
+                    <Frame Grid.Row="1" CornerRadius="12" HasShadow="False" Padding="10" BackgroundColor="White">
                         <HorizontalStackLayout HorizontalOptions="Center">
                             <Image Source="passos.png" WidthRequest="20" HeightRequest="20" />
                             <Label Text="{Binding PassosEstimados}"
@@ -66,7 +66,7 @@
                         </HorizontalStackLayout>
                     </Frame>
 
-                    <Frame Grid.Row="1" Grid.Column="1" CornerRadius="12" HasShadow="False" Padding="10" BorderColor="#FCFCFC">
+                    <Frame Grid.Row="1" Grid.Column="1" CornerRadius="12" HasShadow="False" Padding="10" BackgroundColor="White">
                         <HorizontalStackLayout HorizontalOptions="Center">
                             <Image Source="ritmo.png" WidthRequest="25" HeightRequest="25" />
                             <Label Text="{Binding RitmoFormatado}"
@@ -96,39 +96,51 @@
 
                     <StackLayout Orientation="Horizontal"
                                  HorizontalOptions="Center"
-                                 Spacing="20"
+                                 Spacing="15"
                                  Margin="0,15,0,0">
-                        <StackLayout Orientation="Horizontal" Spacing="8">
+                        <StackLayout Orientation="Horizontal" Spacing="6">
                             <BoxView Color="#00C853" 
-                                   WidthRequest="16" 
-                                   HeightRequest="16"
-                                   CornerRadius="8"/>
+                                   WidthRequest="14" 
+                                   HeightRequest="14"
+                                   CornerRadius="7"/>
                             <Label Text="Mais rápido" 
-                                   FontSize="11" 
+                                   FontSize="10" 
                                    FontAttributes="Bold"
                                    VerticalTextAlignment="Center"
                                    TextColor="#424242"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Horizontal" Spacing="8">
+                        <StackLayout Orientation="Horizontal" Spacing="6">
                             <BoxView Color="#FF9800" 
-                                   WidthRequest="16" 
-                                   HeightRequest="16"
-                                   CornerRadius="8"/>
+                                   WidthRequest="14" 
+                                   HeightRequest="14"
+                                   CornerRadius="7"/>
                             <Label Text="Na média" 
-                                   FontSize="11" 
+                                   FontSize="10" 
                                    FontAttributes="Bold"
                                    VerticalTextAlignment="Center"
                                    TextColor="#424242"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Horizontal" Spacing="8">
+                        <StackLayout Orientation="Horizontal" Spacing="6">
                             <BoxView Color="#FF3D00" 
-                                   WidthRequest="16" 
-                                   HeightRequest="16"
-                                   CornerRadius="8"/>
+                                   WidthRequest="14" 
+                                   HeightRequest="14"
+                                   CornerRadius="7"/>
                             <Label Text="Mais lento" 
-                                   FontSize="11" 
+                                   FontSize="10" 
+                                   FontAttributes="Bold"
+                                   VerticalTextAlignment="Center"
+                                   TextColor="#424242"/>
+                        </StackLayout>
+
+                        <StackLayout Orientation="Horizontal" Spacing="6">
+                            <BoxView Color="#2196F3" 
+                                   WidthRequest="14" 
+                                   HeightRequest="14"
+                                   CornerRadius="7"/>
+                            <Label Text="Parcial" 
+                                   FontSize="10" 
                                    FontAttributes="Bold"
                                    VerticalTextAlignment="Center"
                                    TextColor="#424242"/>
@@ -139,17 +151,16 @@
                 <Frame CornerRadius="12"
                        HasShadow="False"
                        Padding="0"
-                       BackgroundColor="Gray">
+                       BackgroundColor="White">
                     <Grid HeightRequest="180">
                         <WebView x:Name="MapaCorridaWebView" />
                     </Grid>
                 </Frame>
 
                 <Frame CornerRadius="12" 
-                       HasShadow="True" 
+                       HasShadow="False" 
                        Padding="20" 
-                       BackgroundColor="White"
-                       BorderColor="#E0E0E0">
+                       BackgroundColor="White">
                     <StackLayout>
                         <Label Text="{Binding MensagemMotivacional}"
                                FontSize="16"
