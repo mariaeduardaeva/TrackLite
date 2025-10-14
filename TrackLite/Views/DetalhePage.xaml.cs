@@ -256,12 +256,29 @@ namespace TrackLite
                     var corFundo = SKColor.Parse("#FCFCFC");
                     var corPreto = SKColors.Black;
                     var corCinza = SKColor.Parse("#666666");
+                    var corHeaderTabela = SKColor.Parse("#E5E5E5");
+                    var corLinhasTabela = SKColor.Parse("#DDDDDD");
 
                     var paintTexto = new SKPaint
                     {
-                        TextSize = 12,
+                        TextSize = 11,
                         Typeface = SKTypeface.FromFamilyName("Arial"),
                         Color = corPreto,
+                        IsAntialias = true
+                    };
+
+                    var paintHeader = new SKPaint
+                    {
+                        TextSize = 11,
+                        Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold),
+                        Color = corPreto,
+                        IsAntialias = true
+                    };
+
+                    var paintLinha = new SKPaint
+                    {
+                        Color = corLinhasTabela,
+                        StrokeWidth = 1,
                         IsAntialias = true
                     };
 
@@ -274,10 +291,11 @@ namespace TrackLite
                         TextAlign = SKTextAlign.Center
                     };
 
-                    float margemEsquerda = 60;
+                    float margemEsquerda = 40;
                     float larguraMaxima = pageInfo.Width - 2 * margemEsquerda;
                     float margemInferior = 60;
                     float y = 160;
+                    float alturaLinha = 18;
 
                     SKCanvas canvas = null;
 
@@ -289,7 +307,8 @@ namespace TrackLite
                         canvas = document.BeginPage(pageInfo.Width, pageInfo.Height);
                         canvas.Clear(corFundo);
 
-                        canvas.DrawRect(0, 0, pageInfo.Width, 120, new SKPaint { Color = corPrimaria, IsAntialias = true });
+                        // Cabeçalho
+                        canvas.DrawRect(0, 0, pageInfo.Width, 120, new SKPaint { Color = corPrimaria });
                         canvas.DrawText("Dados CSV da Corrida", pageInfo.Width / 2, 70, new SKPaint
                         {
                             TextSize = 28,
@@ -298,7 +317,6 @@ namespace TrackLite
                             IsAntialias = true,
                             TextAlign = SKTextAlign.Center
                         });
-
                         canvas.DrawText($"Gerado em {DateTime.Now:dd/MM/yyyy HH:mm}", pageInfo.Width / 2, 95, new SKPaint
                         {
                             TextSize = 14,
@@ -308,70 +326,81 @@ namespace TrackLite
                             TextAlign = SKTextAlign.Center
                         });
 
-                        y = 160;
+                        y = 150;
                     }
 
                     NovaPagina(true);
 
-                    void DrawTextWrapped(string text, float x, ref float y, float maxWidth, SKPaint paint)
+                    var pontos = CorridaSelecionada.Rota;
+                    if (pontos == null || pontos.Count == 0)
                     {
-                        var partes = text.Split(',');
-                        string linha = "";
-
-                        foreach (var parte in partes)
-                        {
-                            string palavra = parte.Trim();
-                            if (palavra.Length > 0)
-                                palavra += ",";
-
-                            var testLine = string.IsNullOrEmpty(linha) ? palavra : $"{linha}{palavra}";
-                            var width = paint.MeasureText(testLine);
-
-                            if (width > maxWidth)
-                            {
-                                if (y > pageInfo.Height - margemInferior)
-                                {
-                                    NovaPagina();
-                                }
-
-                                canvas.DrawText(linha, x, y, paint);
-                                y += paint.TextSize + 2;
-                                linha = palavra;
-                            }
-                            else
-                            {
-                                linha = testLine;
-                            }
-                        }
-
-                        if (!string.IsNullOrEmpty(linha))
-                        {
-                            if (y > pageInfo.Height - margemInferior)
-                            {
-                                NovaPagina();
-                            }
-
-                            canvas.DrawText(linha, x, y, paint);
-                            y += paint.TextSize + 2;
-                        }
+                        canvas.DrawText("Nenhum dado de rota disponível.", margemEsquerda, y, paintTexto);
+                        document.EndPage();
+                        document.Close();
+                        return;
                     }
 
-                    var pontos = CorridaSelecionada.Rota;
+                    float[] colunas = { 50, 110, 190, 270, 370, 540 };
 
-                    string latitudes = string.Join(",", pontos.Select(p => p.lat.ToString("F6", CultureInfo.InvariantCulture)));
-                    string longitudes = string.Join(",", pontos.Select(p => p.lng.ToString("F6", CultureInfo.InvariantCulture)));
-                    string accuracies = string.Join(",", pontos.Select(p =>
-                        p.accuracy > 0 ? p.accuracy.ToString("F1", CultureInfo.InvariantCulture) : "-"));
-                    string timestamps = string.Join(",", pontos.Select(p =>
-                        p.timestamp != default ? p.timestamp.ToString("yyyy-MM-dd HH:mm:ss") : DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+                    void DesenharCabecalho()
+                    {
+                        canvas.DrawRect(margemEsquerda, y, larguraMaxima, alturaLinha, new SKPaint { Color = corHeaderTabela });
 
-                    DrawTextWrapped($"Latitudes: {latitudes}", margemEsquerda, ref y, larguraMaxima, paintTexto);
-                    DrawTextWrapped($"Longitudes: {longitudes}", margemEsquerda, ref y, larguraMaxima, paintTexto);
-                    DrawTextWrapped($"Accuracy: {accuracies}", margemEsquerda, ref y, larguraMaxima, paintTexto);
-                    DrawTextWrapped($"Timestamp: {timestamps}", margemEsquerda, ref y, larguraMaxima, paintTexto);
+                        canvas.DrawText("Nº", colunas[0], y + 13, paintHeader);
+                        canvas.DrawText("Latitude", colunas[1], y + 13, paintHeader);
+                        canvas.DrawText("Longitude", colunas[2], y + 13, paintHeader);
+                        canvas.DrawText("Accuracy (m)", colunas[3], y + 13, paintHeader);
+                        canvas.DrawText("Timestamp", colunas[4], y + 13, paintHeader);
 
-                    y += 20;
-                    if (y > pageInfo.Height - margemInferior) NovaPagina();
+                        for (int i = 0; i < colunas.Length; i++)
+                        {
+                            canvas.DrawLine(colunas[i] - 10, y, colunas[i] - 10, y + alturaLinha, paintLinha);
+                        }
+                        canvas.DrawLine(colunas[colunas.Length - 1] + 20, y, colunas[colunas.Length - 1] + 20, y + alturaLinha, paintLinha);
+
+                        y += alturaLinha + 5;
+                    }
+
+                    DesenharCabecalho();
+
+                    int contador = 1;
+                    foreach (var p in pontos)
+                    {
+                        if (y > pageInfo.Height - margemInferior)
+                        {
+                            NovaPagina();
+                            DesenharCabecalho();
+                        }
+
+                        string lat = p.lat.ToString("F6", CultureInfo.InvariantCulture);
+                        string lng = p.lng.ToString("F6", CultureInfo.InvariantCulture);
+                        string acc = p.accuracy > 0 ? p.accuracy.ToString("F1", CultureInfo.InvariantCulture) : "-";
+                        string time = p.timestamp != default ? p.timestamp.ToString("dd/MM/yyyy HH:mm:ss") : "-";
+
+                        if (paintTexto.MeasureText(time) > (pageInfo.Width - margemEsquerda - colunas[4] - 20))
+                        {
+                            time = time[..Math.Min(time.Length, 16)] + "...";
+                        }
+
+                        canvas.DrawText(contador.ToString(), colunas[0], y + 13, paintTexto);
+                        canvas.DrawText(lat, colunas[1], y + 13, paintTexto);
+                        canvas.DrawText(lng, colunas[2], y + 13, paintTexto);
+                        canvas.DrawText(acc, colunas[3], y + 13, paintTexto);
+                        canvas.DrawText(time, colunas[4], y + 13, paintTexto);
+
+                        for (int i = 0; i < colunas.Length; i++)
+                        {
+                            canvas.DrawLine(colunas[i] - 10, y, colunas[i] - 10, y + alturaLinha, paintLinha);
+                        }
+                        canvas.DrawLine(colunas[colunas.Length - 1] + 20, y, colunas[colunas.Length - 1] + 20, y + alturaLinha, paintLinha);
+
+                        y += alturaLinha;
+                        contador++;
+                    }
+
+                    y += 25;
+                    if (y > pageInfo.Height - margemInferior)
+                        NovaPagina();
 
                     canvas.DrawText($"Data: {CorridaSelecionada.Data:dd/MM/yyyy HH:mm}", margemEsquerda, y, paintTexto); y += 18;
                     canvas.DrawText($"Distância: {CorridaSelecionada.Distancia}", margemEsquerda, y, paintTexto); y += 18;
