@@ -56,7 +56,10 @@ namespace TrackLite
                 _limiarAccuracy = AppSettings.GetAccuracyInMeters();
                 _vibracaoKmAtivada = AppSettings.VibracaoKm;
 
-                Console.WriteLine("=== CONFIGURAÇÕES CARREGADAS ===");
+                if (_limiarAccuracy > 25.0) _limiarAccuracy = 25.0;
+                if (_intervaloColeta < 1000) _intervaloColeta = 1000;
+
+                Console.WriteLine("=== CONFIGURAÇÕES OTIMIZADAS ===");
                 Console.WriteLine($"Frequencia: {AppSettings.FrequenciaColeta}s -> {_intervaloColeta}ms");
                 Console.WriteLine($"Accuracy: {AppSettings.LimiarAccuracy} -> {_limiarAccuracy}m");
                 Console.WriteLine($"Vibração: {_vibracaoKmAtivada}");
@@ -71,6 +74,30 @@ namespace TrackLite
             }
         }
         #endregion
+
+        private async void DebugButton_Clicked(object sender, EventArgs e)
+        {
+            string action = await DisplayActionSheet("Modo Debug", "Cancelar", null,
+                "Modo Preciso (2m min)", "Modo Balanceado (1.5m min)", "Modo Sensível (1m min)");
+
+            switch (action)
+            {
+                case "Modo Preciso (2m min)":
+                    _limiarAccuracy = 15.0;
+                    _intervaloColeta = 2000;
+                    break;
+                case "Modo Balanceado (1.5m min)":
+                    _limiarAccuracy = 20.0;
+                    _intervaloColeta = 1500;
+                    break;
+                case "Modo Sensível (1m min)":
+                    _limiarAccuracy = 25.0;
+                    _intervaloColeta = 1000;
+                    break;
+            }
+
+            await DisplayAlert("Debug", $"Modo: {action}\nAccuracy: {_limiarAccuracy}m\nIntervalo: {_intervaloColeta}ms", "OK");
+        }
 
         #region Timer
         private void InicializarTimer()
@@ -262,10 +289,21 @@ setTimeout(function() {{
                 timestamp = DateTime.Now
             };
 
+            if (accuracy > _limiarAccuracy)
+            {
+                Console.WriteLine($"🗑️ Ponto descartado no mapa: accuracy={accuracy:F1}m > limiar={_limiarAccuracy:F1}m");
+                return;
+            }
+
             if (ultimoPontoAdicionado != null)
             {
                 double distancia = Haversine(ultimoPontoAdicionado, novoPonto);
-                if (distancia < (_limiarAccuracy / 1000.0)) return;
+
+                if (distancia < 1.5)
+                {
+                    Console.WriteLine($"🗑️ Movimento pequeno demais: {distancia:F2}m");
+                    return;
+                }
             }
 
             rota.Add(novoPonto);
@@ -289,6 +327,16 @@ setTimeout(function() {{
             AtualizarDistanciaEPace();
         }
 
+        private bool DeveAdicionarPonto(Ponto novoPonto)
+        {
+            if (rota.Count == 0)
+                return true;
+
+            var ultimoPonto = rota[^1];
+            double distancia = Haversine(ultimoPonto, novoPonto);
+
+            return distancia >= 5.0;
+        }
 
         private async Task CentralizarUsuario()
         {
@@ -299,7 +347,6 @@ setTimeout(function() {{
             {
                 string js = $"centralizar({location.Latitude}, {location.Longitude});";
                 await MapWebView.EvaluateJavaScriptAsync(js);
-                // Chamar AtualizarMapa com o accuracy real
                 await AtualizarMapa(location.Latitude, location.Longitude, location.Accuracy ?? _limiarAccuracy);
             }
         }
@@ -313,7 +360,6 @@ setTimeout(function() {{
             {
                 string js = $"window.map.setView([{location.Latitude}, {location.Longitude}], {ZoomInicial}, {{animate: true, duration: 1}});";
                 await MapWebView.EvaluateJavaScriptAsync(js);
-                // Atualizar o mapa com accuracy real
                 await AtualizarMapa(location.Latitude, location.Longitude, location.Accuracy ?? _limiarAccuracy);
             }
         }
@@ -347,48 +393,62 @@ setTimeout(function() {{
             trackingCts = new CancellationTokenSource();
             var token = trackingCts.Token;
 
-            Ponto ultimoPonto = null;
+            Ponto ultimoPontoValido = null;
+            const double velocidadeMaxima = 5.0;
+            const double distanciaMinima = 2.0;
 
             try
             {
                 while (!token.IsCancellationRequested)
                 {
                     var location = await ObterLocalizacaoComAccuracy();
-                    if (location != null)
+                    if (location != null && location.Accuracy.HasValue)
                     {
-                        double accuracy = location.Accuracy ?? 9999;
-                        double velocidade = 0.0;
+                        double accuracy = location.Accuracy.Value;
 
-                        if (ultimoPonto != null)
+                        var pontoCandidato = new Ponto
                         {
-                            double distancia = Haversine(ultimoPonto, new Ponto { lat = location.Latitude, lng = location.Longitude });
-                            double tempoSegundos = (DateTime.Now - ultimoPonto.timestamp).TotalSeconds;
+                            lat = location.Latitude,
+                            lng = location.Longitude,
+                            accuracy = accuracy,
+                            timestamp = DateTime.Now
+                        };
+
+                        double velocidade = 0;
+                        double distanciaDoUltimo = 0;
+
+                        if (ultimoPontoValido != null)
+                        {
+                            distanciaDoUltimo = Haversine(ultimoPontoValido, pontoCandidato);
+                            double tempoSegundos = (pontoCandidato.timestamp - ultimoPontoValido.timestamp).TotalSeconds;
                             if (tempoSegundos > 0)
-                                velocidade = distancia / tempoSegundos;
+                                velocidade = distanciaDoUltimo / tempoSegundos;
                         }
 
                         bool pontoValido =
-                            accuracy <= 50 &&
-                            (velocidade == 0 || velocidade <= 7);
+                            accuracy <= _limiarAccuracy && 
+                            accuracy > 0 && 
+                            (ultimoPontoValido == null ||
+                             distanciaDoUltimo >= distanciaMinima) && 
+                            velocidade <= velocidadeMaxima; 
 
                         if (pontoValido)
                         {
-                            ultimoPonto = new Ponto
-                            {
-                                lat = location.Latitude,
-                                lng = location.Longitude,
-                                accuracy = location.Accuracy ?? _limiarAccuracy,
-                                timestamp = DateTime.Now
-                            };
+                            Console.WriteLine($"📍 Ponto ACEITO: accuracy={accuracy:F1}m, dist={distanciaDoUltimo:F1}m, vel={velocidade:F1}m/s");
+
+                            ultimoPontoValido = pontoCandidato;
 
                             await MainThread.InvokeOnMainThreadAsync(async () =>
                             {
-                                await AtualizarMapa(ultimoPonto.lat, ultimoPonto.lng, ultimoPonto.accuracy);
+                                await AtualizarMapa(pontoCandidato.lat, pontoCandidato.lng, pontoCandidato.accuracy);
                             });
                         }
                         else
                         {
-                            Console.WriteLine($"📍 Ponto descartado: accuracy={accuracy:F1}m, velocidade={velocidade:F2}m/s");
+                            if (ultimoPontoValido != null)
+                            {
+                                Console.WriteLine($"📍 Ponto DESCARTADO: acc={accuracy:F1}m, dist={distanciaDoUltimo:F1}m, vel={velocidade:F1}m/s");
+                            }
                         }
                     }
 
@@ -397,7 +457,6 @@ setTimeout(function() {{
             }
             catch (TaskCanceledException) { }
         }
-
 
         private void StopTracking()
         {
@@ -710,11 +769,9 @@ setTimeout(function() {{
                     jsAtualizarRota += "]); }";
                     await MapWebView.EvaluateJavaScriptAsync(jsAtualizarRota);
 
-                    // Usar a variável que já existe na classe
                     var pontoFinal = rota[^1];
                     await MapWebView.EvaluateJavaScriptAsync($"atualizarUsuario({pontoFinal.lat}, {pontoFinal.lng});");
 
-                    // Não precisa chamar AtualizarMapa aqui pois já estamos restaurando
                 }
                 catch { }
             }
@@ -733,7 +790,6 @@ setTimeout(function() {{
                     {
                         await MainThread.InvokeOnMainThreadAsync(async () =>
                         {
-                            // Usar a localização atual do GPS, não uma variável que não existe
                             await AtualizarMapa(location.Latitude, location.Longitude, location.Accuracy ?? _limiarAccuracy);
                         });
                     }
