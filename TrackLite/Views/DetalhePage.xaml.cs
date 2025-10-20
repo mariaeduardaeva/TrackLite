@@ -21,6 +21,8 @@ namespace TrackLite
     {
         private Corrida? corridaSelecionada;
         private readonly DatabaseService _databaseService = new DatabaseService();
+        private bool mapaPronto = false;
+        private TaskCompletionSource<bool> mapaInicializadoTcs = new();
 
         public Corrida? CorridaSelecionada
         {
@@ -36,8 +38,11 @@ namespace TrackLite
                 OnPropertyChanged(nameof(MensagemMotivacional));
                 OnPropertyChanged(nameof(SubtituloMotivacional));
 
-                if (corridaSelecionada != null) CarregarMapa();
-                if (corridaSelecionada != null) CarregarGraficoPacePorKm();
+                if (corridaSelecionada != null)
+                {
+                    _ = CarregarMapaCompativel();
+                    CarregarGraficoPacePorKm();
+                }
             }
         }
 
@@ -127,12 +132,187 @@ namespace TrackLite
             BindingContext = this;
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
             if (corridaSelecionada != null)
             {
                 CarregarGraficoPacePorKm();
+                if (!mapaPronto)
+                {
+                    await mapaInicializadoTcs.Task;
+                }
+            }
+        }
+
+        private async Task CarregarMapaCompativel()
+        {
+            if (CorridaSelecionada == null || CorridaSelecionada.Rota.Count == 0)
+            {
+                mapaPronto = true;
+                mapaInicializadoTcs.TrySetResult(true);
+                return;
+            }
+
+            try
+            {
+                var pontosJson = System.Text.Json.JsonSerializer.Serialize(
+                    CorridaSelecionada.Rota.Select(p => new { p.lat, p.lng }));
+
+                double lat = CorridaSelecionada.Rota[0].lat;
+                double lng = CorridaSelecionada.Rota[0].lng;
+
+                string html = @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+        }
+        .fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .leaflet-container {
+            background: #f8f9fa;
+        }
+        .rota-style {
+            stroke: true;
+            color: '#21A179';
+            weight: 4;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div id='map'>
+        <div class='fallback' id='fallback'>
+            <div>
+                <h3>TrackLite</h3>
+                <p>Carregando rota...</p>
+                <p><small>Mapa em carregamento...</small></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var mapLoaded = false;
+        var map, rotaLine;
+        var rotaCoords = " + pontosJson + @";
+        
+        function loadLeaflet() {
+            if (mapLoaded) return;
+            
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            link.onerror = function() {
+                showFallback('Mapa offline - Rota carregada');
+                setTimeout(function() {
+                    window.location.href = 'app://map-ready';
+                }, 100);
+            };
+            document.head.appendChild(link);
+
+            var script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.onload = initializeMap;
+            script.onerror = function() {
+                showFallback('Mapa offline - Rota carregada');
+                setTimeout(function() {
+                    window.location.href = 'app://map-ready';
+                }, 100);
+            };
+            document.head.appendChild(script);
+        }
+
+        function initializeMap() {
+            try {
+                var fallback = document.getElementById('fallback');
+                if (fallback) fallback.style.display = 'none';
+                
+                map = L.map('map', {
+                    zoomControl: true,
+                    dragging: true,
+                    tap: false
+                }).setView([" + lat.ToString().Replace(',', '.') + @", " + lng.ToString().Replace(',', '.') + @"], 15);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                if (rotaCoords && rotaCoords.length > 0) {
+                    rotaLine = L.polyline(rotaCoords, {
+                        color: '#21A179',
+                        weight: 4,
+                        opacity: 0.8
+                    }).addTo(map);
+                    
+                    map.fitBounds(rotaLine.getBounds());
+                }
+
+                mapLoaded = true;
+                window.location.href = 'app://map-ready';
+                
+            } catch(error) {
+                showFallback('Rota carregada - Mapa limitado');
+                setTimeout(function() {
+                    window.location.href = 'app://map-ready';
+                }, 100);
+            }
+        }
+
+        function showFallback(message) {
+            var fallback = document.getElementById('fallback');
+            if (fallback) {
+                fallback.innerHTML = '<div><h3>TrackLite</h3><p>' + message + '</p><p><small>Rota com ' + rotaCoords.length + ' pontos</small></p></div>';
+                fallback.style.display = 'flex';
+            }
+        }
+
+        setTimeout(loadLeaflet, 50);
+
+    </script>
+</body>
+</html>";
+
+                MapaCorridaWebView.Source = new HtmlWebViewSource { Html = html };
+
+                MapaCorridaWebView.Navigating += (s, e) =>
+                {
+                    if (e.Url?.Contains("map-ready") == true)
+                    {
+                        e.Cancel = true;
+                        mapaPronto = true;
+                        mapaInicializadoTcs.TrySetResult(true);
+                    }
+                };
+
+            }
+            catch (Exception ex)
+            {
+                mapaPronto = true;
+                mapaInicializadoTcs.TrySetResult(true);
             }
         }
 
@@ -421,39 +601,6 @@ namespace TrackLite
             }
         }
 
-
-        private void CarregarMapa()
-        {
-            if (CorridaSelecionada == null || CorridaSelecionada.Rota.Count == 0) return;
-
-            var pontosJson = System.Text.Json.JsonSerializer.Serialize(CorridaSelecionada.Rota.Select(p => new { p.lat, p.lng }));
-            double lat = CorridaSelecionada.Rota[0].lat;
-            double lng = CorridaSelecionada.Rota[0].lng;
-
-            string html = $@"
-<!DOCTYPE html>
-<html>
-<head>
-<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
-<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
-<style>html, body, #map {{ height:100%; margin:0; padding:0; }}</style>
-</head>
-<body>
-<div id='map' style='width:100%; height:100%;'></div>
-<script>
-var map = L.map('map').setView([{lat}, {lng}], 15);
-L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png').addTo(map);
-var rotaCoords = {pontosJson};
-var polyline = L.polyline(rotaCoords, {{color: '#21A179'}}).addTo(map);
-map.fitBounds(polyline.getBounds());
-</script>
-</body>
-</html>";
-
-            MapaCorridaWebView.Source = new HtmlWebViewSource { Html = html };
-        }
-
         private void CarregarGraficoPacePorKm()
         {
             if (CorridaSelecionada == null) return;
@@ -501,7 +648,7 @@ map.fitBounds(polyline.getBounds());
             {
                 Label = $"{distanciaKm:F2} km",
                 ValueLabel = "",
-                Color = SKColor.Parse("#2196F3"), 
+                Color = SKColor.Parse("#2196F3"),
                 TextColor = SKColor.Parse("#2196F3")
             });
 
@@ -545,7 +692,7 @@ map.fitBounds(polyline.getBounds());
                         return minutos + (segundos / 60.0);
                     }
                 }
-                else if (partes.Length == 3) 
+                else if (partes.Length == 3)
                 {
                     if (int.TryParse(partes[0], out int horas) &&
                         int.TryParse(partes[1], out int minutos) &&
@@ -557,7 +704,6 @@ map.fitBounds(polyline.getBounds());
             }
             catch (Exception)
             {
-               
             }
 
             return 0;
@@ -607,7 +753,7 @@ map.fitBounds(polyline.getBounds());
                     {
                         Label = $"{distanciaParcial:F2} km",
                         ValueLabel = "",
-                        Color = SKColor.Parse("#2196F3"), 
+                        Color = SKColor.Parse("#2196F3"),
                         TextColor = SKColor.Parse("#2196F3")
                     });
 
@@ -622,18 +768,17 @@ map.fitBounds(polyline.getBounds());
         private void MostrarGraficoVazio()
         {
             var entries = new List<ChartEntry>
-    {
-        new ChartEntry(5)
-        {
-            Label = "Sem dados",
-            ValueLabel = "Complete pelo menos 100m",
-            Color = SKColor.Parse("#B0BEC5"),
-            TextColor = SKColor.Parse("#B0BEC5")
-        }
-    };
+            {
+                new ChartEntry(5)
+                {
+                    Label = "Sem dados",
+                    ValueLabel = "Complete pelo menos 100m",
+                    Color = SKColor.Parse("#B0BEC5"),
+                    TextColor = SKColor.Parse("#B0BEC5")
+                }
+            };
             AtualizarGrafico(entries, 10, 0);
         }
-
 
         private void AtualizarGrafico(List<ChartEntry> entries, float? maxValue = null, float? minValue = null)
         {
